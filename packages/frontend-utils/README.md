@@ -8,7 +8,7 @@ Utility functions for frontend development.
 
 To install the package, run:
 
-```
+```bash
 npm install @magnidev/frontend-utils
 pnpm add @magnidev/frontend-utils
 ```
