@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+.turbo/
+
+# Cache directories
+.cache/
+.parcel-cache/
+.vscode/
+
+# Package manager files
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.staging
+
+# Logs
+*.log
+logs/
+
+# Generated files
+**/*.generated.*
+**/*.min.*
+
+# Coverage reports
+coverage/
+.nyc_output/
+
+# Other
+.DS_Store
+Thumbs.db
