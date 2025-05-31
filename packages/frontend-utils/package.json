@@ -1,0 +1,48 @@
+{
+  "name": "@magnidev/frontend-utils",
+  "version": "1.0.0",
+  "license": "ISC",
+  "description": "Utility functions for frontend development",
+  "author": {
+    "name": "fermeridamagni <Magni Developer>",
+    "url": "https://www.magnideveloper.com"
+  },
+  "repository": {
+    "url": "git+https://github.com/fermeridamagni/magnidev.git",
+    "type": "git",
+    "directory": "packages/frontend-utils"
+  },
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/fermeridamagni/magnidev/issues"
+  },
+  "homepage": "https://github.com/fermeridamagni/magnidev/tree/main/packages/frontend-utils#readme",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "ts-node src/index.ts"
+  },
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "main": "dist/index.js",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "package.json"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^3.2.0"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "typescript": "5.8.3"
+  }
+}
