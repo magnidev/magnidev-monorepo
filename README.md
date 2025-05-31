@@ -1,4 +1,4 @@
-# Monorepo for @magnidev tools.
+# Monorepo for @magnidev tools
 
 ## Introduction
 
