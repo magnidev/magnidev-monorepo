@@ -2,10 +2,10 @@
   "name": "magnidev-monorepo",
   "license": "ISC",
   "private": true,
-  "description": "Monorepo for Magni Developer tools.",
-  "publisher": "fermeridamagni <Magni Developer>",
+  "description": "Monorepo for Magni Development tools.",
+  "publisher": "fermeridamagni <Magni Development>",
   "author": {
-    "name": "fermeridamagni <Magni Developer>",
+    "name": "fermeridamagni <Magni Development>",
     "url": "https://www.magnideveloper.com"
   },
   "repository": {
