@@ -1,0 +1,60 @@
+{
+  "name": "@magnidev/repo-cli",
+  "version": "1.0.3",
+  "license": "ISC",
+  "description": "CLI to manage packages in Repositories or Monorepos of GitHub.",
+  "author": {
+    "name": "fermeridamagni <Magni Development>",
+    "url": "https://www.magnideveloper.com"
+  },
+  "repository": {
+    "url": "git+https://github.com/fermeridamagni/magnidev",
+    "type": "git",
+    "directory": "packages/repo-cli"
+  },
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/fermeridamagni/magnidev/issues"
+  },
+  "homepage": "https://www.magnideveloper.com/en/docs/package/repo-cli",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json && node --trace-warnings dist/main.js"
+  },
+  "types": "./dist/main.d.ts",
+  "bin": {
+    "repo": "./dist/main.js"
+  },
+  "exports": {
+    ".": "./dist/main.js"
+  },
+  "main": "dist/main.js",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "package.json"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.11.0",
+    "@octokit/rest": "^22.0.0",
+    "commander": "^14.0.0",
+    "dotenv": "^16.5.0",
+    "fast-glob": "^3.3.3",
+    "picocolors": "^1.1.1",
+    "semver": "^7.7.2",
+    "simple-git": "^3.27.0",
+    "zod": "^3.25.41"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.27",
+    "@types/semver": "^7.7.0",
+    "ts-node": "^10.9.2",
+    "typescript": "5.8.3"
+  }
+}
