@@ -49,10 +49,10 @@
     "picocolors": "^1.1.1",
     "semver": "^7.7.2",
     "simple-git": "^3.27.0",
-    "zod": "^3.25.41"
+    "zod": "^3.25.44"
   },
   "devDependencies": {
-    "@types/node": "^22.15.27",
+    "@types/node": "^22.15.29",
     "@types/semver": "^7.7.0",
     "ts-node": "^10.9.2",
     "typescript": "5.8.3"
