@@ -1,13 +1,13 @@
-# Monorepo for @magnidev tools
+# ✨ Monorepo for @magnidev tools
 
 ## Introduction
 
-This repository contains a collection of tools and libraries developed by the Magnidev team. The goal of this monorepo is to provide a single place for all our projects, making it easier to manage dependencies and share code between them.
+This repository contains a collection of tools, libraries and apps developed by the Magni Development team. The goal of this monorepo is to provide a single place for all our projects, making it easier to manage dependencies and share code between them.
 
 ## Contributing
 
-We welcome contributions to this monorepo! If you have an idea for a new tool or library, or if you want to improve an existing one, please feel free to open an issue or submit a pull request.
+Feel free to open pull requests; we welcome contributions! However, for significant changes, it's best to open an issue beforehand. Make sure to review our [contribution guidelines](https://github.com/magnidev/magnidev-monorepo/blob/main/CONTRIBUTING.md) before creating a pull request. Before creating your own issue or pull request, always check to see if one already exists!
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/magnidev/magnidev-monorepo/blob/main/LICENSE) file for details.
