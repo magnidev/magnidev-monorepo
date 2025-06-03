@@ -15,7 +15,6 @@
   "keywords": [
     "typescript",
     "tsconfig",
-    "tsconfig",
     "magnidev"
   ],
   "bugs": {
@@ -27,7 +26,7 @@
     "./node-library": "./src/tsconfig.node-library.json"
   },
   "files": [
-    "dist",
+    "src",
     "README.md",
     "LICENSE",
     "CHANGELOG.md",
