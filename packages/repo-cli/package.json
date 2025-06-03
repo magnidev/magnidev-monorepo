@@ -5,21 +5,36 @@
   "description": "CLI to manage packages in Repositories or Monorepos of GitHub.",
   "author": {
     "name": "fermeridamagni <Magni Development>",
-    "url": "https://www.magnideveloper.com"
+    "url": "https://magnideveloper.com"
   },
   "repository": {
-    "url": "git+https://github.com/fermeridamagni/magnidev",
     "type": "git",
+    "url": "git+https://github.com/magnidev/magnidev-monorepo.git",
     "directory": "packages/repo-cli"
   },
-  "keywords": [],
+  "keywords": [
+    "cli",
+    "github",
+    "monorepo",
+    "repository",
+    "management",
+    "packages",
+    "typescript",
+    "nodejs",
+    "npm"
+  ],
   "bugs": {
-    "url": "https://github.com/fermeridamagni/magnidev/issues"
+    "url": "https://github.com/magnidev/magnidev-monorepo/issues"
   },
-  "homepage": "https://www.magnideveloper.com/en/docs/package/repo-cli",
+  "homepage": "https://magnideveloper.com/en/docs/developers/packages/repo-cli/getting-started/introduction",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "dev": "tsc -p tsconfig.json && node --trace-warnings dist/main.js"
+    "build": "tspc -p tsconfig.json",
+    "start": "node dist/main.js",
+    "dev": "ts-node src/main.ts",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run"
   },
   "types": "./dist/main.d.ts",
   "bin": {
@@ -49,12 +64,19 @@
     "picocolors": "^1.1.1",
     "semver": "^7.7.2",
     "simple-git": "^3.27.0",
-    "zod": "^3.25.44"
+    "zod": "^3.25.49"
   },
   "devDependencies": {
+    "@magnidev/typescript-config": "workspace:*",
+    "@types/jest": "^29.5.14",
     "@types/node": "^22.15.29",
     "@types/semver": "^7.7.0",
+    "@vitest/ui": "^3.2.0",
     "ts-node": "^10.9.2",
-    "typescript": "5.8.3"
+    "ts-patch": "^3.3.0",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "5.8.3",
+    "typescript-transform-paths": "^3.5.5",
+    "vitest": "^3.2.0"
   }
 }
