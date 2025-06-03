@@ -1,0 +1,11 @@
+{
+  // This file is used for library projects in TypeScript.
+  "extends": "./tsconfig.node-base.json",
+  "compilerOptions": {
+    "emitDeclarationOnly": false /* Only output d.ts files and not JavaScript files. */,
+    /* Emit */
+    "declaration": true /* Generate .d.ts files from TypeScript and JavaScript files in your project. */,
+    "composite": true /* Enable project references. */,
+    "outDir": "./dist" /* Specify an output folder for all emitted files. */
+  }
+}
