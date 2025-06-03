@@ -8,15 +8,15 @@
     "url": "https://www.magnideveloper.com"
   },
   "repository": {
-    "url": "git+https://github.com/fermeridamagni/magnidev-priv.git",
+    "url": "git+https://github.com/magnidev/magnidev-monorepo.git",
     "type": "git",
     "directory": "packages/theme"
   },
   "keywords": [],
   "bugs": {
-    "url": "https://github.com/fermeridamagni/magnidev/issues"
+    "url": "https://github.com/magnidev/magnidev-monorepo/issues"
   },
-  "homepage": "https://github.com/fermeridamagni/magnidev/tree/main/packages/theme#readme",
+  "homepage": "https://magnideveloper.com/en/docs/package/theme",
   "scripts": {
     "build": "tsc -p tsconfig.json"
   },
@@ -38,12 +38,13 @@
     "registry": "https://registry.npmjs.org/"
   },
   "peerDependencies": {
-    "tailwindcss": "^4.1.6"
+    "tailwindcss": "^4.1.8"
   },
   "dependencies": {
-    "tw-animate-css": "^1.2.9"
+    "tw-animate-css": "^1.3.3"
   },
   "devDependencies": {
+    "@magnidev/typescript-config": "workspace:*",
     "typescript": "5.8.3"
   }
 }
