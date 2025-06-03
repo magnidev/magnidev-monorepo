@@ -1,6 +1,7 @@
 {
   "name": "@magnidev/repo-cli",
   "version": "2.0.0-canary.0",
+  "type": "commonjs",
   "license": "ISC",
   "description": "CLI to manage packages in Repositories or Monorepos of GitHub.",
   "author": {
@@ -71,12 +72,12 @@
     "@types/jest": "^29.5.14",
     "@types/node": "^22.15.29",
     "@types/semver": "^7.7.0",
-    "@vitest/ui": "^3.2.0",
+    "@vitest/ui": "^3.2.1",
     "ts-node": "^10.9.2",
     "ts-patch": "^3.3.0",
     "tsconfig-paths": "^4.2.0",
     "typescript": "5.8.3",
     "typescript-transform-paths": "^3.5.5",
-    "vitest": "^3.2.0"
+    "vitest": "^3.2.1"
   }
 }
