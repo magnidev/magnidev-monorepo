@@ -21,7 +21,7 @@
   "bugs": {
     "url": "https://github.com/magnidev/magnidev-monorepo/issues"
   },
-  "homepage": "https://magnideveloper.com/en/docs/package/typescript-config",
+  "homepage": "https://magnideveloper.com/en/docs/developers/packages/typescript-config/getting-started/introduction",
   "exports": {
     "./node-base": "./src/tsconfig.node-base.json",
     "./node-library": "./src/tsconfig.node-library.json"
