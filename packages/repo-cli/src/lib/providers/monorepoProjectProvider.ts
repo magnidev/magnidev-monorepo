@@ -139,8 +139,17 @@ class MonorepoProjectProvider {
         throw new Error("No package.json found in the current directory");
       }
 
-      // Write the validated configuration to the package.json file
-      await writeJsonFile(rootPackageJsonPath, userConfigParsed.data);
+      // Read the existing package.json to preserve other fields
+      const existingPackageJson = await readJsonFile(rootPackageJsonPath);
+
+      // Merge the existing package.json with the new configuration
+      const newPackageJson = {
+        ...existingPackageJson,
+        ...userConfigParsed.data,
+      };
+
+      // Write the merged configuration back to the package.json file
+      await writeJsonFile(rootPackageJsonPath, newPackageJson);
 
       success = true;
       message = "Monorepo configuration initialized successfully.";
