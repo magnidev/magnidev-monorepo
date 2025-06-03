@@ -19,15 +19,17 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
+    "check-types": "turbo run check-types",
     "format:fix": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "repo-cli": "cd packages/repo-cli && pnpm build && cd ../.. && node ./packages/repo-cli/dist/main.js"
   },
   "workspaces": [
     "packages/*"
   ],
   "release": {
     "repositoryUrl": "https://github.com/fermeridamagni/magnidev",
-    "strategy": "independent"
+    "versioningStrategy": "independent"
   },
   "devDependencies": {
     "@magnidev/repo-cli": "^1.0.2",
@@ -40,7 +42,7 @@
     "turbo": "^2.5.4",
     "typescript": "5.8.3"
   },
-  "packageManager": "pnpm@10.11.0",
+  "packageManager": "pnpm@10.11.1",
   "engines": {
     "node": ">=18"
   }
