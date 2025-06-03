@@ -16,7 +16,7 @@
   "bugs": {
     "url": "https://github.com/magnidev/magnidev-monorepo/issues"
   },
-  "homepage": "https://magnideveloper.com/en/docs/package/theme",
+  "homepage": "https://magnideveloper.com/en/docs/developers/packages/theme/getting-started/introduction",
   "scripts": {
     "build": "tsc -p tsconfig.json"
   },
