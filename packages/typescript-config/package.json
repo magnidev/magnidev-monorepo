@@ -1,6 +1,6 @@
 {
   "name": "@magnidev/typescript-config",
-  "version": "1.0.3",
+  "version": "0.2.0",
   "license": "ISC",
   "description": "TypeScript configuration files for the Magni Development monorepo.",
   "author": {
