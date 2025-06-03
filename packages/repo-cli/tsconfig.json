@@ -14,7 +14,7 @@
       "@config/*": ["src/config/*"]
     } /* Path mappings for module resolution */,
     "declarationDir": "./dist/types" /* Output directory for generated declaration files */,
-    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo" /* Specify the location of the build info file */,
+    "tsBuildInfoFile": "./node_modules/.cache/tsconfig.tsbuildinfo" /* Specify the path to .tsbuildinfo incremental compilation file. */,
     "plugins": [{ "transform": "typescript-transform-paths" }] // Enable path transformations
   },
   "include": [
