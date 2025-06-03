@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/magnidev/magnidev-monorepo.git",
+    "url": "git+https://github.com/magnidev/magnidev-monorepo.git",
     "directory": "."
   },
   "bugs": {
@@ -23,7 +23,7 @@
     "check-types": "turbo run check-types",
     "format:fix": "prettier --write .",
     "format:check": "prettier --check .",
-    "repo-cli": "cd packages/repo-cli && pnpm build && cd ../.. && node ./packages/repo-cli/dist/main.js"
+    "repo-cli:dev": "cd packages/repo-cli && pnpm build && cd ../.. && node ./packages/repo-cli/dist/main.js"
   },
   "workspaces": [
     "packages/*"
