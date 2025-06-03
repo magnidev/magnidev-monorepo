@@ -8,15 +8,15 @@
     "url": "https://www.magnideveloper.com"
   },
   "repository": {
-    "url": "git+https://github.com/fermeridamagni/magnidev.git",
+    "url": "git+https://github.com/magnidev/magnidev-monorepo.git",
     "type": "git",
     "directory": "packages/frontend-utils"
   },
   "keywords": [],
   "bugs": {
-    "url": "https://github.com/fermeridamagni/magnidev/issues"
+    "url": "https://github.com/magnidev/magnidev-monorepo/issues"
   },
-  "homepage": "https://github.com/fermeridamagni/magnidev/tree/main/packages/frontend-utils#readme",
+  "homepage": "https://magnideveloper.com/en/docs/developers/packages/frontend-utils/getting-started/introduction",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "ts-node src/index.ts"
@@ -37,11 +37,15 @@
     "access": "public",
     "registry": "https://registry.npmjs.org/"
   },
+  "peerDependencies": {
+    "tailwindcss": "4.1.8"
+  },
   "dependencies": {
     "clsx": "^2.1.1",
-    "tailwind-merge": "^3.2.0"
+    "tailwind-merge": "^3.3.0"
   },
   "devDependencies": {
+    "@magnidev/typescript-config": "workspace:*",
     "ts-node": "^10.9.2",
     "typescript": "5.8.3"
   }
