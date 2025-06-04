@@ -16,6 +16,15 @@ import {
  */
 export type ConfigTool = SingleProjectConfig | MonorepoProjectConfig;
 
+/**
+ * The result type for functions that return a success or failure message.
+ */
+export type FunctionResult<T = { [key: string]: string }> = Promise<{
+  success: boolean;
+  message: string;
+  data?: T; // Optional data returned on success
+}>;
+
 // #region Single Projects
 /**
  * The configuration schema for single projects.
@@ -50,12 +59,3 @@ export type MonorepoProjectPackageJson = z.infer<
   typeof monorepoProjectPackageJsonSchema
 >;
 // #endregion
-
-/**
- * The result type for functions that return a success or failure message.
- */
-export type FunctionResult<T = { [key: string]: string }> = Promise<{
-  success: boolean;
-  message: string;
-  data?: T; // Optional data returned on success
-}>;
