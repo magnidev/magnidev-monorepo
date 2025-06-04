@@ -7,6 +7,10 @@ on:
   pull_request:
     types: [opened, reopened]
 
+concurrency:
+  group: auto-assign-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   auto-assign:
     name: Auto Assign
