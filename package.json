@@ -20,10 +20,9 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
-    "check-types": "turbo run check-types",
-    "format:fix": "prettier --write .",
-    "format:check": "prettier --check .",
-    "repo-cli:dev": "cd packages/repo-cli && pnpm build && cd ../.. && node ./packages/repo-cli/dist/main.js"
+    "format:check": "turbo run format:check",
+    "format:write": "turbo run format:write",
+    "test": "turbo run test"
   },
   "workspaces": [
     "packages/*"
