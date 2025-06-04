@@ -7,6 +7,10 @@ on:
   pull_request:
     branches: ["*"]
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   install-and-check:
     name: Install and Check
