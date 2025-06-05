@@ -14,7 +14,7 @@ class GitClient {
     this.client = simpleGit(process.cwd());
   }
 
-  // #region Check If Repo
+  // #region - @checkIsRepo
   /**
    * @returns A promise that resolves to a FunctionResult indicating success or failure.
    * @description Checks if the current directory is a git repository.
@@ -36,9 +36,9 @@ class GitClient {
       message,
     };
   }
-  // #endregion
+  // #endregion - @checkIsRepo
 
-  // #region Get Current Branch
+  // #region - @getCurrentBranch
   /**
    * @returns A promise that resolves to the current branch name.
    * @description Retrieves the current branch name of the git repository.
@@ -64,9 +64,9 @@ class GitClient {
       data,
     };
   }
-  // #endregion
+  // #endregion - @getCurrentBranch
 
-  // #region Get Remote URL
+  // #region - @getRemoteUrl
   /**
    * @returns A promise that resolves to the remote URL of the repository.
    * @description Retrieves the remote URL of the git repository.
@@ -96,9 +96,9 @@ class GitClient {
       data,
     };
   }
-  // #endregion
+  // #endregion - @getRemoteUrl
 
-  // #region Get Repo Status
+  // #region - @getStatus
   /**
    * @returns A promise that resolves to the status of the repository.
    * @description Retrieves the status of the git repository, including staged, unstaged, and untracked files.
@@ -112,9 +112,9 @@ class GitClient {
       throw new Error("Failed to get repository status");
     }
   }
-  // #endregion
+  // #endregion - @getStatus
 
-  // #region Get Commits
+  // #region - @getCommits
   /**
    * @returns A promise that resolves to a list of commits in the repository.
    * @description Retrieves the commit history of the git repository.
@@ -147,9 +147,9 @@ class GitClient {
       data,
     };
   }
-  // #endregion
+  // #endregion - @getCommits
 
-  // #region Get Owner and Repo
+  // #region - @getOwnerAndRepo
   /**
    * @returns A promise that resolves to the owner and repository name from the remote URL.
    * @description Extracts the owner and repository name from the remote URL of the git repository.
@@ -186,7 +186,35 @@ class GitClient {
       data,
     };
   }
-  // #endregion
+  // #endregion - @getOwnerAndRepo
+
+  // #region - @checkHasChanges
+  /**
+   * @returns A promise that resolves to a boolean indicating if there are changes in the repository.
+   * @description Checks if there are any changes in the git repository.
+   */
+  public async checkHasChanges(): Promise<FunctionResult<boolean>> {
+    let success: boolean = false;
+    let message: string = "";
+    let data: boolean = false;
+
+    try {
+      const status = await this.getStatus();
+      data = status.files.length > 0 || status.not_added.length > 0;
+      success = true;
+      message = "Checked for changes successfully";
+    } catch (error) {
+      success = false;
+      message = `Failed to check for changes: ${error instanceof Error ? error.message : String(error)}`;
+    }
+
+    return {
+      success,
+      message,
+      data,
+    };
+  }
+  // #endregion - @checkHasChanges
 }
 
 export default GitClient;
