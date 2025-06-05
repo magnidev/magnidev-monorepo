@@ -243,6 +243,7 @@ function initCommand(program: Command): Command {
           onCancel: () => onCancel("Initialization cancelled."),
         }
       );
+      // #endregion Initialization
 
       // #region Business Logic
       const tasks = await prompts.tasks([
@@ -281,7 +282,7 @@ function initCommand(program: Command): Command {
 
       prompts.outro("🚀 Repo CLI by @magnidev, happy coding!");
 
-      // #endregion
+      // #endregion Business Logic
     });
 }
 
