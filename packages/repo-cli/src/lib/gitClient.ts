@@ -215,6 +215,60 @@ class GitClient {
     };
   }
   // #endregion - @checkHasChanges
+
+  // #region - @getChanges
+  /**
+   * @returns A promise that resolves to a FunctionResult containing the changes in the repository.
+   * @description Retrieves the changes in the git repository, including staged, unstaged, and untracked files.
+   */
+  public async getChanges(): Promise<FunctionResult<StatusResult | null>> {
+    let success: boolean = false;
+    let message: string = "";
+    let data: StatusResult | null = null;
+
+    try {
+      const status = await this.getStatus();
+      data = status;
+      success = true;
+      message = "Changes retrieved successfully";
+    } catch (error) {
+      success = false;
+      message = `Failed to get changes: ${error instanceof Error ? error.message : String(error)}`;
+    }
+
+    return {
+      success,
+      message,
+      data,
+    };
+  }
+  // #endregion - @getChanges
+
+  // #region - @addFiles
+  /**
+   * @param files - An array of file paths to add to the staging area.
+   * @returns A promise that resolves to a FunctionResult indicating success or failure.
+   * @description Adds specified files to the staging area of the git repository.
+   */
+  public async addFiles(files: string[]): Promise<FunctionResult> {
+    let success: boolean = false;
+    let message: string = "";
+
+    try {
+      await this.client.add(files);
+      success = true;
+      message = "Files added to staging area successfully";
+    } catch (error) {
+      success = false;
+      message = `Failed to add files: ${error instanceof Error ? error.message : String(error)}`;
+    }
+
+    return {
+      success,
+      message,
+    };
+  }
+  // #endregion - @addFiles
 }
 
 export default GitClient;
