@@ -1,6 +1,6 @@
 import { z } from "zod/v4";
 
-import { packageJsonSchema } from "@schemas/config";
+import { packageJsonSchema } from "@/schemas/packageJsonSchema";
 
 /**
  * Schema for validating a single project configuration.
