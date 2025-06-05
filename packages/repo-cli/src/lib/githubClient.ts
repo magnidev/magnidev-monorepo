@@ -11,7 +11,7 @@ class GitHubClient {
 
   constructor() {}
 
-  // #region Init Client
+  // #region - @init
   /**
    * @description Initializes the GitHub client with a personal access token.
    * @param token - The personal access token for GitHub API authentication.
@@ -19,9 +19,9 @@ class GitHubClient {
   private init(token: string) {
     this.client = new Octokit({ auth: token });
   }
-  // #endregion
+  // #endregion - @init
 
-  // #region Get User Info
+  // #region - @getUserInfo
   /**
    * @description Retrieves the authenticated user's information.
    * @returns A promise that resolves to the user's information.
@@ -33,9 +33,9 @@ class GitHubClient {
     const response = await this.client.users.getAuthenticated();
     return response.data;
   }
-  // #endregion
+  // #endregion - @getUserInfo
 
-  // #region Get Repo Info
+  // #region - @getRepoInfo
   /**
    * @description Retrieves repository information by owner and repo name.
    * @param owner - The owner of the repository.
@@ -49,9 +49,9 @@ class GitHubClient {
     const response = await this.client.repos.get({ owner, repo });
     return response.data;
   }
-  // #endregion
+  // #endregion - @getRepoInfo
 
-  // #region Create Release
+  // #region - @createRelease
   /**
    * @description Creates a new release for a repository.
    * @param owner - The owner of the repository.
@@ -80,9 +80,9 @@ class GitHubClient {
     });
     return response.data;
   }
-  // #endregion
+  // #endregion - @createRelease
 
-  // #region List Releases
+  // #region - @listReleases
   /**
    * @description Lists releases for a repository.
    * @param owner - The owner of the repository.
@@ -99,9 +99,9 @@ class GitHubClient {
     });
     return response.data;
   }
-  // #endregion
+  // #endregion - @listReleases
 
-  // #region Delete Release
+  // #region - @deleteRelease
   /**
    * @description Deletes a release by its ID.
    * @param owner - The owner of the repository.
@@ -123,9 +123,9 @@ class GitHubClient {
       release_id: releaseId,
     });
   }
-  // #endregion
+  // #endregion - @deleteRelease
 
-  // #region Check Repo Exists
+  // #region - @checkRepoExists
   /**
    * @description Checks if a repository exists.
    * @param owner - The owner of the repository.
@@ -146,7 +146,7 @@ class GitHubClient {
       throw error;
     }
   }
-  // #endregion
+  // #endregion - @checkRepoExists
 }
 
 export default GitHubClient;
