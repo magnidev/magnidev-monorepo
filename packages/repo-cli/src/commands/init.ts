@@ -5,7 +5,7 @@ import z from "zod/v4";
 
 import type { MonorepoProjectConfig, SingleProjectConfig } from "@/types";
 import Repository from "@/lib/repository";
-import { intro } from "@/utils/intro";
+import { intro, outro } from "@/utils/intro";
 import { onCancel } from "@/utils/cancel";
 
 type InitCommandOptions = {
@@ -280,7 +280,7 @@ function initCommand(program: Command): Command {
         return; // This line is unreachable but keeps TypeScript happy
       }
 
-      prompts.outro("🚀 Repo CLI by @magnidev, happy coding!");
+      prompts.outro(outro);
 
       // #endregion Business Logic
     });
