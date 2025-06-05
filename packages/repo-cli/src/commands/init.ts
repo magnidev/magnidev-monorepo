@@ -47,7 +47,7 @@ function initCommand(program: Command): Command {
 
       const userConfig = await prompts.group(
         {
-          // #region type
+          // #region - @type
           type: async () => {
             // Determine the type of repository based on user input or options
             if (monorepo) return "monorepo";
@@ -70,8 +70,8 @@ function initCommand(program: Command): Command {
               ],
             });
           },
-          // #endregion type
-          // #region release
+          // #endregion - @type
+          // #region - @release
           release: async ({ results }) => {
             // If --yes is true, use default values
             if (shouldSkip) {
@@ -138,8 +138,8 @@ function initCommand(program: Command): Command {
             onCancel("Invalid repository type selected.");
             return undefined; // Return undefined for not-handled cases
           },
-          // #endregion
-          // #region workspaces
+          // #endregion - @release
+          // #region - @workspaces
           workspaces: async ({ results }) => {
             if (results.type === "monorepo") {
               // If --yes is true, use default workspaces
@@ -180,8 +180,8 @@ function initCommand(program: Command): Command {
             // If we reach here, it means an invalid type was selected
             return undefined; // Return undefined for not-handled cases
           },
-          // #endregion workspaces
-          // #region publishConfig
+          // #endregion - @workspaces
+          // #region - @publishConfig
           publishConfig: async ({ results }) => {
             if (results.type === "single") {
               // If --yes is true, use default publishConfig
@@ -237,7 +237,7 @@ function initCommand(program: Command): Command {
 
             return undefined; // Return undefined for not-handled cases
           },
-          // #endregion publishConfig
+          // #endregion - @publishConfig
         },
         {
           onCancel: () => onCancel("Initialization cancelled."),
