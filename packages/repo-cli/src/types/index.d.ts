@@ -1,20 +1,26 @@
 import { z } from "zod/v4-mini";
+import type { DefaultLogFields, ListLogLine } from "simple-git";
 
 import {
   singleProjectConfigSchema,
   singleProjectPackageJsonSchema,
-} from "@/schemas/providers/singleProject";
+} from "@/schemas/providers/singleProjectSchemas";
 
 import {
   monorepoProjectConfigSchema,
   monorepoProjectRootPackageJsonSchema,
   monorepoProjectPackageJsonSchema,
-} from "@/schemas/providers/monorepoProject";
+} from "@/schemas/providers/monorepoProjectSchemas";
 
 /**
  * The configuration tool schema for the repository.
  */
 export type ConfigTool = SingleProjectConfig | MonorepoProjectConfig;
+
+/**
+ * A commit object that includes default log fields and a list log line.
+ */
+export type Commit = DefaultLogFields & ListLogLine;
 
 /**
  * The result type for functions that return a success or failure message.
