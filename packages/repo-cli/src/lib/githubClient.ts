@@ -11,16 +11,19 @@ class GitHubClient {
 
   constructor() {}
 
+  // #region Init Client
   /**
-   * Initializes the GitHub client with a personal access token.
+   * @description Initializes the GitHub client with a personal access token.
    * @param token - The personal access token for GitHub API authentication.
    */
-  public init(token: string) {
+  private init(token: string) {
     this.client = new Octokit({ auth: token });
   }
+  // #endregion
 
+  // #region Get User Info
   /**
-   * Retrieves the authenticated user's information.
+   * @description Retrieves the authenticated user's information.
    * @returns A promise that resolves to the user's information.
    */
   public async getUserInfo(): Promise<any> {
@@ -30,9 +33,11 @@ class GitHubClient {
     const response = await this.client.users.getAuthenticated();
     return response.data;
   }
+  // #endregion
 
+  // #region Get Repo Info
   /**
-   * Retrieves repository information by owner and repo name.
+   * @description Retrieves repository information by owner and repo name.
    * @param owner - The owner of the repository.
    * @param repo - The name of the repository.
    * @returns A promise that resolves to the repository information.
@@ -44,9 +49,11 @@ class GitHubClient {
     const response = await this.client.repos.get({ owner, repo });
     return response.data;
   }
+  // #endregion
 
+  // #region Create Release
   /**
-   * Creates a new release for a repository.
+   * @description Creates a new release for a repository.
    * @param owner - The owner of the repository.
    * @param repo - The name of the repository.
    * @param tagName - The name of the tag to create the release for.
@@ -73,9 +80,11 @@ class GitHubClient {
     });
     return response.data;
   }
+  // #endregion
 
+  // #region List Releases
   /**
-   * Lists releases for a repository.
+   * @description Lists releases for a repository.
    * @param owner - The owner of the repository.
    * @param repo - The name of the repository.
    * @returns A promise that resolves to the list of releases.
@@ -90,9 +99,11 @@ class GitHubClient {
     });
     return response.data;
   }
+  // #endregion
 
+  // #region Delete Release
   /**
-   * Deletes a release by its ID.
+   * @description Deletes a release by its ID.
    * @param owner - The owner of the repository.
    * @param repo - The name of the repository.
    * @param releaseId - The ID of the release to delete.
@@ -112,9 +123,11 @@ class GitHubClient {
       release_id: releaseId,
     });
   }
+  // #endregion
 
+  // #region Check Repo Exists
   /**
-   * Checks if a repository exists.
+   * @description Checks if a repository exists.
    * @param owner - The owner of the repository.
    * @param repo - The name of the repository.
    * @returns A promise that resolves to true if the repository exists, false otherwise.
@@ -133,6 +146,7 @@ class GitHubClient {
       throw error;
     }
   }
+  // #endregion
 }
 
 export default GitHubClient;
