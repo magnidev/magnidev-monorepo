@@ -1,16 +1,12 @@
-import * as prompts from "@clack/prompts";
 import { Command } from "commander";
+import prompts from "@clack/prompts";
 import colors from "picocolors";
 import z from "zod/v4";
 
 import type { MonorepoProjectConfig, SingleProjectConfig } from "@/types";
-import { intro } from "@/assets/intro";
-import MonorepoProjectProvider, {
-  defaultMonorepoProjectConfig,
-} from "@/lib/providers/monorepoProjectProvider";
-import SingleProjectProvider, {
-  defaultSingleProjectConfig,
-} from "@/lib/providers/singleProjectProvider";
+import Repository from "@/lib/repository";
+import { intro } from "@/utils/intro";
+import { onCancel } from "@/utils/cancel";
 
 type InitCommandOptions = {
   monorepo?: boolean;
@@ -29,6 +25,8 @@ function initCommand(program: Command): Command {
       // #region Initialization
       const { monorepo, single, yes: shouldSkip } = options;
 
+      const repository = new Repository();
+
       prompts.updateSettings({
         aliases: {
           w: "up",
@@ -44,11 +42,12 @@ function initCommand(program: Command): Command {
       // Validate that only one of --monorepo or --single is used
       if (monorepo && single) {
         onCancel("Cannot use both --monorepo and --single options together.");
+        return; // This line is unreachable but keeps TypeScript happy
       }
 
       const userConfig = await prompts.group(
         {
-          // #region Repo Type
+          // #region type
           type: async () => {
             // Determine the type of repository based on user input or options
             if (monorepo) return "monorepo";
@@ -71,22 +70,32 @@ function initCommand(program: Command): Command {
               ],
             });
           },
-          // #endregion
-          // #region Release Config
+          // #endregion type
+          // #region release
           release: async ({ results }) => {
             // If --yes is true, use default values
             if (shouldSkip) {
-              if (results.type === "monorepo")
-                return defaultMonorepoProjectConfig.release;
-              if (results.type === "single")
-                return defaultSingleProjectConfig.release;
+              if (results.type === "monorepo") {
+                const { release } =
+                  repository.monorepoProjectProvider.defaultConfig;
+                return release;
+              }
+
+              if (results.type === "single") {
+                const { release } =
+                  repository.singleProjectProvider.defaultConfig;
+                return release;
+              }
 
               // If we reach here, it means an invalid type was selected
-              return onCancel("Invalid repository type selected.");
+              onCancel("Invalid repository type selected.");
+              return undefined;
             }
 
-            // #region Monorepo Project
             if (results.type === "monorepo") {
+              const { release } =
+                repository.monorepoProjectProvider.defaultConfig;
+
               const versioningStrategy = (await prompts.select({
                 message: "Select a release versioningStrategy:",
                 options: [
@@ -105,32 +114,40 @@ function initCommand(program: Command): Command {
                 maxItems: 1,
               })) as MonorepoProjectConfig["release"]["versioningStrategy"];
 
-              if (prompts.isCancel(versioningStrategy)) onCancel();
+              if (prompts.isCancel(versioningStrategy)) {
+                onCancel();
+                return undefined; // This line is unreachable but keeps TypeScript happy
+              }
 
               return {
-                tagFormat: defaultMonorepoProjectConfig.release.tagFormat,
+                tagFormat: release.tagFormat,
                 versioningStrategy: versioningStrategy,
               } satisfies MonorepoProjectConfig["release"];
             }
-            // #endregion
 
-            // #region  Single Project
             if (results.type === "single") {
+              const { release } =
+                repository.singleProjectProvider.defaultConfig;
+
               return {
-                tagFormat: defaultSingleProjectConfig.release.tagFormat,
+                tagFormat: release.tagFormat,
               } satisfies SingleProjectConfig["release"];
             }
-            // #endregion
 
             // If we reach here, it means an invalid type was selected
-            return onCancel("Invalid repository type selected.");
+            onCancel("Invalid repository type selected.");
+            return undefined; // Return undefined for not-handled cases
           },
           // #endregion
-          // #region Workspaces Config
+          // #region workspaces
           workspaces: async ({ results }) => {
             if (results.type === "monorepo") {
               // If --yes is true, use default workspaces
-              if (shouldSkip) return defaultMonorepoProjectConfig.workspaces;
+              if (shouldSkip) {
+                const { workspaces } =
+                  repository.monorepoProjectProvider.defaultConfig;
+                return workspaces;
+              }
 
               const validateWorkspace = (value: string) => {
                 if (value.trim() === "") {
@@ -150,19 +167,29 @@ function initCommand(program: Command): Command {
                 validate: validateWorkspace,
               })) as string;
 
+              if (prompts.isCancel(workspaces)) {
+                onCancel();
+                return undefined; // This line is unreachable but keeps TypeScript happy
+              }
+
               const parsedWorkspaces = workspaces.split(" ").filter(Boolean);
 
               return Array.from(parsedWorkspaces);
             }
 
-            return undefined; // No workspaces for single projects
+            // If we reach here, it means an invalid type was selected
+            return undefined; // Return undefined for not-handled cases
           },
-          // #endregion
-          // #region Publish Config
+          // #endregion workspaces
+          // #region publishConfig
           publishConfig: async ({ results }) => {
             if (results.type === "single") {
               // If --yes is true, use default publishConfig
-              if (shouldSkip) return defaultSingleProjectConfig.publishConfig;
+              if (shouldSkip) {
+                const { publishConfig } =
+                  repository.singleProjectProvider.defaultConfig;
+                return publishConfig;
+              }
 
               const validateRegistry = (value: string) => {
                 if (z.url().safeParse(value).success) {
@@ -190,7 +217,10 @@ function initCommand(program: Command): Command {
                 maxItems: 1,
               })) as SingleProjectConfig["publishConfig"]["access"];
 
-              if (prompts.isCancel(access)) onCancel();
+              if (prompts.isCancel(access)) {
+                onCancel();
+                return undefined; // This line is unreachable but keeps TypeScript happy
+              }
 
               const registry = (await prompts.text({
                 message: "Enter the npm registry URL:",
@@ -199,24 +229,27 @@ function initCommand(program: Command): Command {
                 validate: validateRegistry,
               })) as SingleProjectConfig["publishConfig"]["registry"];
 
-              if (prompts.isCancel(registry)) onCancel();
+              if (prompts.isCancel(registry)) {
+                onCancel();
+                return undefined; // This line is unreachable but keeps TypeScript happy
+              }
             }
 
-            return undefined; // No publishConfig for monorepo projects
+            return undefined; // Return undefined for not-handled cases
           },
+          // #endregion publishConfig
         },
         {
           onCancel: () => onCancel("Initialization cancelled."),
         }
       );
-      // #endregion
 
       // #region Business Logic
       const tasks = await prompts.tasks([
         {
           title: "Initializing Monorepo configuration...",
           task: async () => {
-            const client = new MonorepoProjectProvider();
+            const client = repository.monorepoProjectProvider;
 
             const { success, message } = await client.init(
               userConfig as MonorepoProjectConfig
@@ -229,7 +262,7 @@ function initCommand(program: Command): Command {
         {
           title: "Initializing Single Project configuration...",
           task: async () => {
-            const client = new SingleProjectProvider();
+            const client = repository.singleProjectProvider;
 
             const { success, message } = await client.init(
               userConfig as SingleProjectConfig
@@ -243,17 +276,13 @@ function initCommand(program: Command): Command {
 
       if (prompts.isCancel(tasks)) {
         onCancel("Initialization cancelled.");
+        return; // This line is unreachable but keeps TypeScript happy
       }
 
       prompts.outro("🚀 Repo CLI by @magnidev, happy coding!");
 
       // #endregion
     });
-}
-
-function onCancel(message?: string) {
-  prompts.cancel(message || "Operation cancelled.");
-  process.exit(1); // Exit the process with an error code
 }
 
 export default initCommand;
