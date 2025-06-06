@@ -61,7 +61,6 @@ function commitCommand(program: Command): Command {
 
         // Check if the repository is a monorepo or single project
         const repoType = await repositoryClient.getRepoType();
-
         if (!repoType.success || !repoType.data) {
           onCommandFlowCancel("Failed to determine repository type.");
         }
@@ -71,7 +70,6 @@ function commitCommand(program: Command): Command {
           repoType.data === "monorepo"
             ? await repositoryClient.monorepoProjectProvider.getConfig()
             : await repositoryClient.singleProjectProvider.getConfig();
-
         if (!configResult.success || !configResult.data) {
           onCommandFlowCancel(configResult.message);
         }
@@ -85,7 +83,6 @@ function commitCommand(program: Command): Command {
               if (repoType.data === "single") {
                 const foundPackage =
                   await repositoryClient.singleProjectProvider.getPackage();
-
                 if (!foundPackage.success || !foundPackage.data) {
                   onCommandFlowCancel(foundPackage.message);
                 }
@@ -96,7 +93,6 @@ function commitCommand(program: Command): Command {
               if (repoType.data === "monorepo") {
                 const foundPackages =
                   await repositoryClient.monorepoProjectProvider.getPackages();
-
                 if (!foundPackages.success || !foundPackages.data) {
                   onCommandFlowCancel(foundPackages.message);
                 }
@@ -284,7 +280,6 @@ function commitCommand(program: Command): Command {
               const addResult = await gitClient.addFiles(
                 filesToCommit.map((file) => file.path)
               );
-
               if (!addResult.success) {
                 throw new Error(addResult.message);
               }
@@ -296,7 +291,6 @@ function commitCommand(program: Command): Command {
                 body: commitBody,
                 scope: commitScope as string,
               });
-
               if (!commitResult.success) {
                 throw new Error(commitResult.message);
               }
@@ -304,7 +298,6 @@ function commitCommand(program: Command): Command {
               // If the user opted to push, do it now
               if (userConfig.shouldPush) {
                 const pushResult = await gitClient.pushChanges(); // Push changes to the remote repository
-
                 if (!pushResult.success) {
                   throw new Error(pushResult.message);
                 }

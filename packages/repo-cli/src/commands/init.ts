@@ -42,7 +42,6 @@ function initCommand(program: Command): Command {
         onCommandFlowCancel(
           "Cannot use both --monorepo and --single options together."
         );
-        return; // This line is unreachable but keeps TypeScript happy
       }
       // #endregion - Initialization
 
