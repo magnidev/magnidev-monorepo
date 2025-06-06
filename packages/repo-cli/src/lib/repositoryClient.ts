@@ -9,15 +9,20 @@ import path from "node:path";
 import type { FunctionResultPromise } from "@/types";
 import MonorepoProjectProvider from "@/lib/providers/monorepoProjectProvider";
 import SingleProjectProvider from "@/lib/providers/singleProjectProvider";
+import GitClient from "@/lib/gitClient";
 import { dirExists, readJsonFile } from "@/utils/files";
 
 class Repository {
-  public monorepoProjectProvider: MonorepoProjectProvider =
-    new MonorepoProjectProvider();
-  public singleProjectProvider: SingleProjectProvider =
-    new SingleProjectProvider();
+  public gitClient: GitClient;
+  public monorepoProjectProvider: MonorepoProjectProvider;
+  public singleProjectProvider: SingleProjectProvider;
 
-  constructor() {}
+  constructor() {
+    this.gitClient = new GitClient();
+
+    this.monorepoProjectProvider = new MonorepoProjectProvider();
+    this.singleProjectProvider = new SingleProjectProvider();
+  }
 
   /**
    * @description Get the type of repository (single or monorepo) based on the presence of a workspaces field in package.json.

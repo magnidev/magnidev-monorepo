@@ -2,7 +2,6 @@ import { Command } from "commander";
 import prompts from "@clack/prompts";
 import colors from "picocolors";
 
-import GitClient from "@/lib/gitClient";
 import RepositoryClient from "@/lib/repositoryClient";
 import { intro, outro } from "@/utils/intro";
 import { onCommandFlowCancel, onCommandFlowError } from "@/utils/events";
@@ -40,7 +39,7 @@ function commitCommand(program: Command): Command {
       try {
         // #region - Initialize Clients
         const repositoryClient = new RepositoryClient();
-        const gitClient = new GitClient();
+        const gitClient = repositoryClient.gitClient;
 
         // Check if the current directory is a Git repository
         const isGitRepo = await gitClient.checkIsRepo();
