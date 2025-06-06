@@ -12,7 +12,7 @@ import simpleGit, {
 } from "simple-git";
 import colors from "picocolors";
 
-import type { Commit, FunctionResult } from "@/types";
+import type { Commit, FunctionResultPromise } from "@/types";
 
 class GitClient {
   private client: SimpleGit;
@@ -26,7 +26,7 @@ class GitClient {
    * @returns A promise that resolves to a FunctionResult indicating success or failure.
    * @description Checks if the current directory is a git repository.
    */
-  public async checkIsRepo(): Promise<FunctionResult> {
+  public async checkIsRepo(): FunctionResultPromise {
     let success: boolean;
     let message: string;
 
@@ -50,7 +50,7 @@ class GitClient {
    * @returns A promise that resolves to the current branch name.
    * @description Retrieves the current branch name of the git repository.
    */
-  public async getCurrentBranch(): Promise<FunctionResult<string | null>> {
+  public async getCurrentBranch(): FunctionResultPromise<string | null> {
     let success: boolean = false;
     let message: string = "";
     let data: string | null = null;
@@ -78,7 +78,7 @@ class GitClient {
    * @returns A promise that resolves to the remote URL of the repository.
    * @description Retrieves the remote URL of the git repository.
    */
-  public async getRemoteUrl(): Promise<FunctionResult<string | null>> {
+  public async getRemoteUrl(): FunctionResultPromise<string | null> {
     let success: boolean = false;
     let message: string = "";
     let data: string | null = null;
@@ -110,14 +110,26 @@ class GitClient {
    * @returns A promise that resolves to the status of the repository.
    * @description Retrieves the status of the git repository, including staged, unstaged, and untracked files.
    */
-  public async getStatus(): Promise<StatusResult> {
+  public async getStatus(): FunctionResultPromise<StatusResult | null> {
+    let success: boolean = false;
+    let message: string = "";
+    let data: StatusResult | null = null;
+
     try {
       const status = await this.client.status();
-      return status;
+      success = true;
+      message = "Repository status retrieved successfully";
+      data = status;
     } catch (error) {
-      console.error("Error getting repository status:", error);
-      throw new Error("Failed to get repository status");
+      success = false;
+      message = "Failed to get repository status";
     }
+
+    return {
+      success,
+      message,
+      data,
+    };
   }
   // #endregion - @getStatus
 
@@ -126,7 +138,7 @@ class GitClient {
    * @returns A promise that resolves to a list of commits in the repository.
    * @description Retrieves the commit history of the git repository.
    */
-  public async getCommits(): Promise<FunctionResult<Commit[] | null>> {
+  public async getCommits(): FunctionResultPromise<Commit[] | null> {
     let success: boolean = false;
     let message: string = "";
     let data: Commit[] | null = null;
@@ -161,9 +173,10 @@ class GitClient {
    * @returns A promise that resolves to the owner and repository name from the remote URL.
    * @description Extracts the owner and repository name from the remote URL of the git repository.
    */
-  public async getOwnerAndRepo(): Promise<
-    FunctionResult<{ owner: string; repo: string } | null>
-  > {
+  public async getOwnerAndRepo(): FunctionResultPromise<{
+    owner: string;
+    repo: string;
+  } | null> {
     let success: boolean = false;
     let message: string = "";
     let data: { owner: string; repo: string } | null = null;
@@ -200,14 +213,18 @@ class GitClient {
    * @returns A promise that resolves to a boolean indicating if there are changes in the repository.
    * @description Checks if there are any changes in the git repository.
    */
-  public async checkHasChanges(): Promise<FunctionResult<boolean>> {
+  public async checkHasChanges(): FunctionResultPromise<boolean> {
     let success: boolean = false;
     let message: string = "";
     let data: boolean = false;
 
     try {
       const status = await this.getStatus();
-      data = status.files.length > 0 || status.not_added.length > 0;
+      if (!status || !status.data) {
+        throw new Error("Failed to retrieve status or no files found");
+      }
+
+      data = status.data.files.length > 0 || status.data.not_added.length > 0;
       success = true;
       message = "Checked for changes successfully";
     } catch (error) {
@@ -228,14 +245,18 @@ class GitClient {
    * @returns A promise that resolves to a FunctionResult containing the changes in the repository.
    * @description Retrieves the changes in the git repository, including staged, unstaged, and untracked files.
    */
-  public async getChanges(): Promise<FunctionResult<StatusResult | null>> {
+  public async getChanges(): FunctionResultPromise<StatusResult | null> {
     let success: boolean = false;
     let message: string = "";
     let data: StatusResult | null = null;
 
     try {
       const status = await this.getStatus();
-      data = status;
+      if (!status || !status.data) {
+        throw new Error("Failed to retrieve status or no files found");
+      }
+
+      data = status.data;
       success = true;
       message = "Changes retrieved successfully";
     } catch (error) {
@@ -257,7 +278,7 @@ class GitClient {
    * @returns A promise that resolves to a FunctionResult indicating success or failure.
    * @description Adds specified files to the staging area of the git repository.
    */
-  public async addFiles(files: string[]): Promise<FunctionResult> {
+  public async addFiles(files: string[]): FunctionResultPromise {
     let success: boolean = false;
     let message: string = "";
 
@@ -293,7 +314,7 @@ class GitClient {
     message: string;
     body?: string;
     scope?: string;
-  }): Promise<FunctionResult<CommitResult | null>> {
+  }): FunctionResultPromise<CommitResult | null> {
     let success: boolean = false;
     let message: string = "";
     let data: CommitResult | null = null;
@@ -331,7 +352,7 @@ class GitClient {
    * @returns A promise that resolves to a FunctionResult indicating success or failure.
    * @description Pushes the committed changes to the remote repository.
    */
-  public async pushChanges(): Promise<FunctionResult> {
+  public async pushChanges(): FunctionResultPromise {
     let success: boolean = false;
     let message: string = "";
 
