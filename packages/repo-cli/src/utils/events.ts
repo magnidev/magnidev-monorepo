@@ -18,5 +18,4 @@ export function onCommandFlowCancel(message?: string): void {
  */
 export function onCommandFlowError(error: Error): void {
   onCommandFlowCancel(error.message);
-  process.exit(1); // Exit the process with an error code
 }
