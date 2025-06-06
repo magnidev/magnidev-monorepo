@@ -1,4 +1,3 @@
-import type { Formatter } from "picocolors/types";
 import { Command } from "commander";
 import prompts from "@clack/prompts";
 import colors from "picocolors";
