@@ -4,8 +4,15 @@
  * @description Class to manage git operations and repository information
  */
 
+import type { Formatter } from "picocolors/types";
+import simpleGit, {
+  type CommitResult,
+  type StatusResult,
+  type SimpleGit,
+} from "simple-git";
+import colors from "picocolors";
+
 import type { Commit, FunctionResult } from "@/types";
-import simpleGit, { StatusResult, type SimpleGit } from "simple-git";
 
 class GitClient {
   private client: SimpleGit;
@@ -269,6 +276,158 @@ class GitClient {
     };
   }
   // #endregion - @addFiles
+
+  // #region - @commitChanges
+  /**
+   * @param message - The commit message.
+   * @returns A promise that resolves to a FunctionResult indicating success or failure.
+   * @description Commits the staged changes in the git repository with the provided commit message.
+   */
+  public async commitChanges({
+    type: commitType,
+    message: commitMessage,
+    body: commitBody,
+    scope: commitScope,
+  }: {
+    type: string;
+    message: string;
+    body?: string;
+    scope?: string;
+  }): Promise<FunctionResult<CommitResult | null>> {
+    let success: boolean = false;
+    let message: string = "";
+    let data: CommitResult | null = null;
+
+    try {
+      const commit = await this.client.commit(
+        this.constructCommitMessage(
+          commitType,
+          commitScope,
+          commitMessage,
+          commitBody
+        )
+      );
+      if (!commit || !commit.commit) {
+        throw new Error("Commit failed or no commit data returned");
+      }
+      success = true;
+      message = "Changes committed successfully";
+      data = commit;
+    } catch (error) {
+      success = false;
+      message = `Failed to commit changes: ${error instanceof Error ? error.message : String(error)}`;
+    }
+
+    return {
+      success,
+      message,
+      data,
+    };
+  }
+  // #endregion - @commitChanges
+
+  // #region - @pushChanges
+  /**
+   * @returns A promise that resolves to a FunctionResult indicating success or failure.
+   * @description Pushes the committed changes to the remote repository.
+   */
+  public async pushChanges(): Promise<FunctionResult> {
+    let success: boolean = false;
+    let message: string = "";
+
+    try {
+      await this.client.push();
+      success = true;
+      message = "Changes pushed to remote repository successfully";
+    } catch (error) {
+      success = false;
+      message = `Failed to push changes: ${error instanceof Error ? error.message : String(error)}`;
+    }
+
+    return {
+      success,
+      message,
+    };
+  }
+  // #endregion - @pushChanges
+
+  // #region - @getCommitMessage
+  /**
+   * Gets the console color and label for a given change type.
+   * @param type - The type of change (e.g., "a" for added, "m" for modified, "d" for deleted, "r" for renamed).
+   * @description Returns the console color and label for the specified change type.
+   * @returns An object containing the console color and label.
+   */
+  public getChangeInfo = (
+    type: string
+  ): {
+    consoleColor: Formatter;
+    label: string;
+  } => {
+    let consoleColor: Formatter;
+    let label: string;
+
+    switch (type.toLocaleLowerCase()) {
+      case "a":
+        consoleColor = colors.green;
+        label = "Added";
+        break;
+      case "m":
+        consoleColor = colors.blue;
+        label = "Modified";
+        break;
+      case "d":
+        consoleColor = colors.red;
+        label = "Deleted";
+        break;
+      case "r":
+        consoleColor = colors.yellow;
+        label = "Renamed";
+        break;
+      case "?":
+        consoleColor = colors.cyan;
+        label = "Untracked";
+        break;
+      default:
+        consoleColor = colors.white;
+        label = "Unknown";
+    }
+
+    return { consoleColor, label };
+  };
+  // #endregion - @getCommitMessage
+
+  // #region - @constructCommitMessage
+  /**
+   * Constructs a commit message.
+   * @param type - The type of change (e.g., "feat", "fix").
+   * @param scope - The scope of the change (e.g., "ui", "api").
+   * @param message - The short description of the change.
+   * @param body - The detailed description of the change.
+   * @returns The constructed commit message.
+   */
+  private constructCommitMessage = (
+    type: string,
+    scope?: string,
+    message?: string,
+    body?: string
+  ): string => {
+    let commitMsg = "";
+    if (type) {
+      commitMsg += `${type}`;
+    }
+    if (scope) {
+      commitMsg += `(${scope})`;
+    }
+    if (message) {
+      commitMsg += `: ${message}`;
+    }
+    if (body) {
+      commitMsg += `\n\n${body}`;
+    }
+    return commitMsg;
+  };
+  // #endregion - @constructCommitMessage
 }
 
 export default GitClient;
