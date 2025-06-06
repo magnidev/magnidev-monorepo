@@ -23,19 +23,28 @@ class GitClient {
 
   // #region - @checkIsRepo
   /**
-   * @returns A promise that resolves to a FunctionResult indicating success or failure.
    * @description Checks if the current directory is a git repository.
+   * @returns {FunctionResultPromise} A promise that resolves to an object indicating success or failure.
    */
   public async checkIsRepo(): FunctionResultPromise {
-    let success: boolean;
-    let message: string;
+    let success: boolean = false;
+    let message: string = "";
 
     try {
-      success = await this.client.checkIsRepo();
-      message = "Checked if directory is a git repository successfully";
-    } catch (error) {
+      const isRepo = await this.client.checkIsRepo();
+      if (!isRepo) {
+        throw new Error("Current directory is not a git repository");
+      }
+
+      success = true;
+      message = "Current directory is a git repository";
+    } catch (error: any) {
       success = false;
-      message = "Failed to check if directory is a git repository";
+      message = "Failed to check if current directory is a git repository";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
     }
 
     return {
@@ -47,8 +56,8 @@ class GitClient {
 
   // #region - @getCurrentBranch
   /**
-   * @returns A promise that resolves to the current branch name.
    * @description Retrieves the current branch name of the git repository.
+   * @returns {FunctionResultPromise<string | null>} A promise that resolves to the current branch name.
    */
   public async getCurrentBranch(): FunctionResultPromise<string | null> {
     let success: boolean = false;
@@ -60,9 +69,13 @@ class GitClient {
       success = true;
       message = "Current branch retrieved successfully";
       data = branchSummary.current;
-    } catch (error) {
+    } catch (error: any) {
       success = false;
       message = "Failed to get current branch";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
     }
 
     return {
@@ -75,8 +88,8 @@ class GitClient {
 
   // #region - @getRemoteUrl
   /**
-   * @returns A promise that resolves to the remote URL of the repository.
    * @description Retrieves the remote URL of the git repository.
+   * @returns {FunctionResultPromise<string | null>} A promise that resolves to the remote URL or null if not found.
    */
   public async getRemoteUrl(): FunctionResultPromise<string | null> {
     let success: boolean = false;
@@ -92,9 +105,13 @@ class GitClient {
       success = true;
       message = "Remote URL retrieved successfully";
       data = remotes[0].refs.fetch; // Return the fetch URL of the first remote
-    } catch (error) {
+    } catch (error: any) {
       success = false;
       message = "Failed to get remote URL";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
     }
 
     return {
@@ -107,8 +124,8 @@ class GitClient {
 
   // #region - @getStatus
   /**
-   * @returns A promise that resolves to the status of the repository.
    * @description Retrieves the status of the git repository, including staged, unstaged, and untracked files.
+   * @returns {FunctionResultPromise<StatusResult | null>} A promise that resolves to the status of the repository.
    */
   public async getStatus(): FunctionResultPromise<StatusResult | null> {
     let success: boolean = false;
@@ -117,12 +134,17 @@ class GitClient {
 
     try {
       const status = await this.client.status();
+
       success = true;
       message = "Repository status retrieved successfully";
       data = status;
-    } catch (error) {
+    } catch (error: any) {
       success = false;
       message = "Failed to get repository status";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
     }
 
     return {
@@ -135,8 +157,8 @@ class GitClient {
 
   // #region - @getCommits
   /**
-   * @returns A promise that resolves to a list of commits in the repository.
    * @description Retrieves the commit history of the git repository.
+   * @returns {FunctionResultPromise<Commit[] | null>} A promise that resolves to an array of commits or null if no commits are found.
    */
   public async getCommits(): FunctionResultPromise<Commit[] | null> {
     let success: boolean = false;
@@ -155,9 +177,13 @@ class GitClient {
         ...commit,
         message: commit.message,
       }));
-    } catch (error) {
+    } catch (error: any) {
       success = false;
-      message = `Failed to get commits: ${error instanceof Error ? error.message : String(error)}`;
+      message = "Failed to get commits";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
     }
 
     return {
@@ -170,8 +196,8 @@ class GitClient {
 
   // #region - @getOwnerAndRepo
   /**
-   * @returns A promise that resolves to the owner and repository name from the remote URL.
-   * @description Extracts the owner and repository name from the remote URL of the git repository.
+   * @description Retrieves the owner and repository name from the remote URL.
+   * @returns {FunctionResultPromise<{ owner: string; repo: string } | null>} A promise that resolves to an object containing the owner and repository name or null if not found.
    */
   public async getOwnerAndRepo(): FunctionResultPromise<{
     owner: string;
@@ -197,7 +223,11 @@ class GitClient {
       data = { owner: match[1], repo: match[2] };
     } catch (error) {
       success = false;
-      message = `Failed to get owner and repository name: ${error instanceof Error ? error.message : String(error)}`;
+      message = "Failed to get owner and repository name";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
     }
 
     return {
@@ -210,13 +240,12 @@ class GitClient {
 
   // #region - @checkHasChanges
   /**
-   * @returns A promise that resolves to a boolean indicating if there are changes in the repository.
    * @description Checks if there are any changes in the git repository.
+   * @returns {FunctionResultPromise} A promise that resolves to a boolean indicating if there are changes.
    */
-  public async checkHasChanges(): FunctionResultPromise<boolean> {
+  public async checkHasChanges(): FunctionResultPromise {
     let success: boolean = false;
     let message: string = "";
-    let data: boolean = false;
 
     try {
       const status = await this.getStatus();
@@ -224,26 +253,34 @@ class GitClient {
         throw new Error("Failed to retrieve status or no files found");
       }
 
-      data = status.data.files.length > 0 || status.data.not_added.length > 0;
+      const hasChanges: boolean =
+        status.data.files.length === 0 || status.data.not_added.length === 0;
+      if (hasChanges) {
+        throw new Error("There are no changes in the repository");
+      }
+
       success = true;
-      message = "Checked for changes successfully";
-    } catch (error) {
+      message = "There are changes in the repository";
+    } catch (error: any) {
       success = false;
-      message = `Failed to check for changes: ${error instanceof Error ? error.message : String(error)}`;
+      message = "No changes detected";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
     }
 
     return {
       success,
       message,
-      data,
     };
   }
   // #endregion - @checkHasChanges
 
   // #region - @getChanges
   /**
-   * @returns A promise that resolves to a FunctionResult containing the changes in the repository.
-   * @description Retrieves the changes in the git repository, including staged, unstaged, and untracked files.
+   * @description Retrieves the changes in the git repository.
+   * @returns {FunctionResultPromise<StatusResult | null>} A promise that resolves to the status of the repository or null if no changes are found.
    */
   public async getChanges(): FunctionResultPromise<StatusResult | null> {
     let success: boolean = false;
@@ -261,7 +298,11 @@ class GitClient {
       message = "Changes retrieved successfully";
     } catch (error) {
       success = false;
-      message = `Failed to get changes: ${error instanceof Error ? error.message : String(error)}`;
+      message = "Failed to get changes";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
     }
 
     return {
@@ -274,9 +315,9 @@ class GitClient {
 
   // #region - @addFiles
   /**
-   * @param files - An array of file paths to add to the staging area.
-   * @returns A promise that resolves to a FunctionResult indicating success or failure.
-   * @description Adds specified files to the staging area of the git repository.
+   * @description Adds files to the staging area in the git repository.
+   * @param files An array of file paths to add to the staging area.
+   * @returns {FunctionResultPromise} A promise that resolves to a FunctionResultPromise indicating success or failure.
    */
   public async addFiles(files: string[]): FunctionResultPromise {
     let success: boolean = false;
@@ -284,11 +325,16 @@ class GitClient {
 
     try {
       await this.client.add(files);
+
       success = true;
       message = "Files added to staging area successfully";
     } catch (error) {
       success = false;
-      message = `Failed to add files: ${error instanceof Error ? error.message : String(error)}`;
+      message = "Failed to add files";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
     }
 
     return {
@@ -300,9 +346,12 @@ class GitClient {
 
   // #region - @commitChanges
   /**
-   * @param message - The commit message.
-   * @returns A promise that resolves to a FunctionResult indicating success or failure.
-   * @description Commits the staged changes in the git repository with the provided commit message.
+   * @description Commits the staged changes in the git repository.
+   * @param type The type of change (e.g., "feat", "fix").
+   * @param message The short description of the change.
+   * @param body The detailed description of the change (optional).
+   * @param scope The scope of the change (optional).
+   * @returns {FunctionResultPromise<CommitResult | null>} A promise that resolves to the commit result or null if the commit fails.
    */
   public async commitChanges({
     type: commitType,
@@ -328,15 +377,21 @@ class GitClient {
           commitBody
         )
       );
+
       if (!commit || !commit.commit) {
         throw new Error("Commit failed or no commit data returned");
       }
+
       success = true;
       message = "Changes committed successfully";
       data = commit;
     } catch (error) {
       success = false;
-      message = `Failed to commit changes: ${error instanceof Error ? error.message : String(error)}`;
+      message = "Failed to commit changes";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
     }
 
     return {
@@ -349,8 +404,8 @@ class GitClient {
 
   // #region - @pushChanges
   /**
-   * @returns A promise that resolves to a FunctionResult indicating success or failure.
    * @description Pushes the committed changes to the remote repository.
+   * @returns {FunctionResultPromise} A promise that resolves to a FunctionResultPromise indicating success or failure.
    */
   public async pushChanges(): FunctionResultPromise {
     let success: boolean = false;
@@ -358,11 +413,16 @@ class GitClient {
 
     try {
       await this.client.push();
+
       success = true;
       message = "Changes pushed to remote repository successfully";
     } catch (error) {
       success = false;
-      message = `Failed to push changes: ${error instanceof Error ? error.message : String(error)}`;
+      message = "Failed to push changes";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
     }
 
     return {
@@ -374,10 +434,9 @@ class GitClient {
 
   // #region - @getCommitMessage
   /**
-   * Gets the console color and label for a given change type.
-   * @param type - The type of change (e.g., "a" for added, "m" for modified, "d" for deleted, "r" for renamed).
-   * @description Returns the console color and label for the specified change type.
-   * @returns An object containing the console color and label.
+   * @description Returns the console color and label for a given change type.
+   * @param type - The type of change (e.g., "a" for added, "m" for modified).
+   * @returns {consoleColor: Formatter; label: string;} An object containing the console color and label for the change type.
    */
   public getChangeInfo = (
     type: string
@@ -420,12 +479,12 @@ class GitClient {
 
   // #region - @constructCommitMessage
   /**
-   * Constructs a commit message.
-   * @param type - The type of change (e.g., "feat", "fix").
-   * @param scope - The scope of the change (e.g., "ui", "api").
-   * @param message - The short description of the change.
-   * @param body - The detailed description of the change.
-   * @returns The constructed commit message.
+   * @description Constructs a commit message based on the provided type, scope, message, and body.
+   * @param type The type of change (e.g., "feat", "fix").
+   * @param scope The scope of the change (optional).
+   * @param message The short description of the change (optional).
+   * @param body The detailed description of the change (optional).
+   * @returns {string} The constructed commit message.
    */
   private constructCommitMessage = (
     type: string,
