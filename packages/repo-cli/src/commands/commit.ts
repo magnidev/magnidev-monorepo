@@ -63,13 +63,13 @@ function commitCommand(program: Command): Command {
         // Check if the repository is a monorepo or single project
         const repoType = await repositoryClient.getRepoType();
 
-        if (!repoType) {
+        if (!repoType.success || !repoType.data) {
           onCommandFlowCancel("Failed to determine repository type.");
         }
 
         // Get project configuration
         const configResult =
-          repoType === "monorepo"
+          repoType.data === "monorepo"
             ? await repositoryClient.monorepoProjectProvider.getConfig()
             : await repositoryClient.singleProjectProvider.getConfig();
 
@@ -83,7 +83,7 @@ function commitCommand(program: Command): Command {
           {
             // #region - @packageName
             packageName: async () => {
-              if (repoType === "single") {
+              if (repoType.data === "single") {
                 const foundPackage =
                   await repositoryClient.singleProjectProvider.getPackage();
 
@@ -94,7 +94,7 @@ function commitCommand(program: Command): Command {
                 return foundPackage.data!.name;
               }
 
-              if (repoType === "monorepo") {
+              if (repoType.data === "monorepo") {
                 const foundPackages =
                   await repositoryClient.monorepoProjectProvider.getPackages();
 
@@ -181,14 +181,14 @@ function commitCommand(program: Command): Command {
             // #endregion - @commitType
             // #region - @commitScope
             commitScope: async ({ results }) => {
-              if (repoType === "single") {
+              if (repoType.data === "single") {
                 return await prompts.text({
                   message: "Enter a commit scope (or leave empty):",
                   initialValue: scope,
                 });
               }
 
-              if (repoType === "monorepo") {
+              if (repoType.data === "monorepo") {
                 return results.packageName;
               }
 
