@@ -62,7 +62,7 @@ function commitCommand(program: Command): Command {
         // Check if the repository is a monorepo or single project
         const repoType = await repositoryClient.getRepoType();
         if (!repoType.success || !repoType.data) {
-          onCommandFlowCancel("Failed to determine repository type.");
+          onCommandFlowCancel(repoType.message);
         }
 
         // Get project configuration
