@@ -4,9 +4,9 @@ import colors from "picocolors";
 import z from "zod/v4";
 
 import type { MonorepoProjectConfig, SingleProjectConfig } from "@/types";
-import Repository from "@/lib/repository";
+import RepositoryClient from "@/lib/repositoryClient";
 import { intro, outro } from "@/utils/intro";
-import { onCancel } from "@/utils/cancel";
+import { onCommandFlowCancel, onCommandFlowError } from "@/utils/events";
 
 type InitCommandOptions = {
   monorepo?: boolean;
@@ -39,14 +39,15 @@ function initCommand(program: Command): Command {
 
       // Validate that only one of --monorepo or --single is used
       if (monorepo && single) {
-        onCancel("Cannot use both --monorepo and --single options together.");
+        onCommandFlowCancel(
+          "Cannot use both --monorepo and --single options together."
+        );
         return; // This line is unreachable but keeps TypeScript happy
       }
 
       try {
-        const repositoryClient = new Repository();
+        const repositoryClient = new RepositoryClient();
 
-        // #endregion Initialization
         const userConfig = await prompts.group(
           {
             // #region - @type
@@ -80,18 +81,19 @@ function initCommand(program: Command): Command {
                 if (results.type === "monorepo") {
                   const { release } =
                     repositoryClient.monorepoProjectProvider.defaultConfig;
+
                   return release;
                 }
 
                 if (results.type === "single") {
                   const { release } =
                     repositoryClient.singleProjectProvider.defaultConfig;
+
                   return release;
                 }
 
                 // If we reach here, it means an invalid type was selected
-                onCancel("Invalid repository type selected.");
-                return undefined;
+                onCommandFlowCancel("Invalid repository type selected.");
               }
 
               if (results.type === "monorepo") {
@@ -116,10 +118,7 @@ function initCommand(program: Command): Command {
                   maxItems: 1,
                 })) as MonorepoProjectConfig["release"]["versioningStrategy"];
 
-                if (prompts.isCancel(versioningStrategy)) {
-                  onCancel();
-                  return undefined; // This line is unreachable but keeps TypeScript happy
-                }
+                if (prompts.isCancel(versioningStrategy)) onCommandFlowCancel();
 
                 return {
                   tagFormat: release.tagFormat,
@@ -137,8 +136,7 @@ function initCommand(program: Command): Command {
               }
 
               // If we reach here, it means an invalid type was selected
-              onCancel("Invalid repository type selected.");
-              return undefined; // Return undefined for not-handled cases
+              onCommandFlowCancel("Invalid repository type.");
             },
             // #endregion - @release
             // #region - @workspaces
@@ -148,6 +146,7 @@ function initCommand(program: Command): Command {
                 if (shouldSkip) {
                   const { workspaces } =
                     repositoryClient.monorepoProjectProvider.defaultConfig;
+
                   return workspaces;
                 }
 
@@ -169,10 +168,7 @@ function initCommand(program: Command): Command {
                   validate: validateWorkspace,
                 })) as string;
 
-                if (prompts.isCancel(workspaces)) {
-                  onCancel();
-                  return undefined; // This line is unreachable but keeps TypeScript happy
-                }
+                if (prompts.isCancel(workspaces)) onCommandFlowCancel();
 
                 const parsedWorkspaces = workspaces.split(" ").filter(Boolean);
 
@@ -190,6 +186,7 @@ function initCommand(program: Command): Command {
                 if (shouldSkip) {
                   const { publishConfig } =
                     repositoryClient.singleProjectProvider.defaultConfig;
+
                   return publishConfig;
                 }
 
@@ -219,10 +216,7 @@ function initCommand(program: Command): Command {
                   maxItems: 1,
                 })) as SingleProjectConfig["publishConfig"]["access"];
 
-                if (prompts.isCancel(access)) {
-                  onCancel();
-                  return undefined; // This line is unreachable but keeps TypeScript happy
-                }
+                if (prompts.isCancel(access)) onCommandFlowCancel();
 
                 const registry = (await prompts.text({
                   message: "Enter the npm registry URL:",
@@ -231,10 +225,7 @@ function initCommand(program: Command): Command {
                   validate: validateRegistry,
                 })) as SingleProjectConfig["publishConfig"]["registry"];
 
-                if (prompts.isCancel(registry)) {
-                  onCancel();
-                  return undefined; // This line is unreachable but keeps TypeScript happy
-                }
+                if (prompts.isCancel(registry)) onCommandFlowCancel();
               }
 
               return undefined; // Return undefined for not-handled cases
@@ -242,9 +233,10 @@ function initCommand(program: Command): Command {
             // #endregion - @publishConfig
           },
           {
-            onCancel: () => onCancel("Initialization cancelled."),
+            onCancel: () => onCommandFlowCancel("Initialization cancelled."),
           }
         );
+        // #endregion Initialization
 
         // #region Business Logic
         const tasks = await prompts.tasks([
@@ -256,7 +248,7 @@ function initCommand(program: Command): Command {
               const { success, message } = await client.init(
                 userConfig as MonorepoProjectConfig
               );
-              if (!success) onCancel(message);
+              if (!success) onCommandFlowCancel(message);
               return message;
             },
             enabled: userConfig.type === "monorepo",
@@ -269,7 +261,7 @@ function initCommand(program: Command): Command {
               const { success, message } = await client.init(
                 userConfig as SingleProjectConfig
               );
-              if (!success) onCancel(message);
+              if (!success) onCommandFlowCancel(message);
               return message;
             },
             enabled: userConfig.type === "single",
@@ -277,18 +269,14 @@ function initCommand(program: Command): Command {
         ]);
 
         if (prompts.isCancel(tasks)) {
-          onCancel("Initialization cancelled.");
-          return; // This line is unreachable but keeps TypeScript happy
+          onCommandFlowCancel("Initialization cancelled.");
         }
 
         prompts.outro(outro);
 
         // #endregion Business Logic
-      } catch (error) {
-        // Handle any unexpected errors
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-        onCancel(`An unexpected error occurred: ${errorMessage}`);
+      } catch (error: any) {
+        onCommandFlowError(error as Error);
       }
     });
 }
