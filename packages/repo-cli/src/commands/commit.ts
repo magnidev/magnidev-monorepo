@@ -43,24 +43,19 @@ function commitCommand(program: Command): Command {
         const gitClient = new GitClient();
 
         // Check if the current directory is a Git repository
-        const isRepo = await gitClient.checkIsRepo();
-
-        if (!isRepo.success) {
-          onCommandFlowCancel(
-            "This command can only be run inside a Git repository."
-          );
+        const isGitRepo = await gitClient.checkIsRepo();
+        if (!isGitRepo.success) {
+          onCommandFlowCancel(isGitRepo.message);
         }
 
         // Check if there are any changes to commit
         const hasChanges = await gitClient.checkHasChanges();
-
         if (!hasChanges.success || !hasChanges.data) {
           onCommandFlowCancel("No changes to commit.");
         }
 
         // Get uncommitted changes
         const changes = await gitClient.getChanges();
-
         if (!changes.success || !changes.data) {
           onCommandFlowCancel(changes.message);
         }
