@@ -22,7 +22,7 @@ function initCommand(program: Command): Command {
     .option("--single", "initialize a single project configuration")
     .option("-y, --yes", "skip prompts and use default values")
     .action(async (options: InitCommandOptions) => {
-      // #region Initialization
+      // #region - Initialization
       const { monorepo, single, yes: shouldSkip } = options;
 
       prompts.updateSettings({
@@ -44,10 +44,12 @@ function initCommand(program: Command): Command {
         );
         return; // This line is unreachable but keeps TypeScript happy
       }
+      // #endregion - Initialization
 
       try {
         const repositoryClient = new RepositoryClient();
 
+        // #region - Command Flow
         const userConfig = await prompts.group(
           {
             // #region - @type
@@ -236,9 +238,9 @@ function initCommand(program: Command): Command {
             onCancel: () => onCommandFlowCancel("Initialization cancelled."),
           }
         );
-        // #endregion Initialization
+        // #endregion - Command Flow
 
-        // #region Business Logic
+        // #region - Business Logic
         const tasks = await prompts.tasks([
           {
             title: "Initializing Monorepo configuration...",

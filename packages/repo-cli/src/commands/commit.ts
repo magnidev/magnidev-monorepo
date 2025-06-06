@@ -21,7 +21,7 @@ function commitCommand(program: Command): Command {
     .option("-m, --message <message>", "commit message")
     .option("-b, --body <body>", "commit body")
     .action(async (options: CommitCommandOptions) => {
-      // #region Initialization
+      // #region - Initialization
       const { scope, message, body } = options;
 
       prompts.updateSettings({
@@ -35,8 +35,10 @@ function commitCommand(program: Command): Command {
       });
 
       prompts.intro(colors.white(intro));
+      // #endregion - Initialization
 
       try {
+        // #region - Initialize Clients
         const repositoryClient = new RepositoryClient();
         const gitClient = new GitClient();
 
@@ -79,7 +81,9 @@ function commitCommand(program: Command): Command {
         if (!configResult.success || !configResult.data) {
           onCommandFlowCancel(configResult.message);
         }
+        // #endregion - Initialize Clients
 
+        // #region - Command Flow
         const userConfig = await prompts.group(
           {
             // #region - @packageName
@@ -260,9 +264,9 @@ function commitCommand(program: Command): Command {
             onCancel: () => onCommandFlowCancel("Commit cancelled."),
           }
         );
-        // #endregion Initialization
+        // #endregion - Command Flow
 
-        // #region Business Logic
+        // #region - Business Logic
         const tasks = prompts.tasks([
           {
             title: "Constructing commit message",
@@ -324,7 +328,7 @@ function commitCommand(program: Command): Command {
 
         prompts.outro(outro);
 
-        // #endregion Business Logic
+        // #endregion - Business Logic
       } catch (error: any) {
         onCommandFlowError(error as Error);
       }
