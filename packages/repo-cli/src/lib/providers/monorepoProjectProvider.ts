@@ -8,7 +8,7 @@ import path from "node:path";
 import fg from "fast-glob";
 
 import type {
-  FunctionResult,
+  FunctionResultPromise,
   MonorepoProjectConfig,
   MonorepoProjectPackageJson,
 } from "@/types";
@@ -26,19 +26,20 @@ class MonorepoProjectProvider {
       versioningStrategy: "independent",
     },
     workspaces: ["packages/*"],
+    repoType: "monorepo",
   };
 
   constructor() {}
 
-  // #region Parse Config
+  // #region - @parseConfig
   /**
-   * @param config The configuration object to parse.
    * @description Parses and validates the provided configuration object for a monorepo project.
-   * @returns A promise that resolves to a FunctionResult containing the parsed configuration or an error message.
+   * @param config The configuration object to parse.
+   * @returns {FunctionResultPromise<MonorepoProjectConfig | null>} A promise that resolves to a FunctionResult containing the parsed configuration or an error message.
    */
   private async parseConfig(
     config: MonorepoProjectConfig | null
-  ): Promise<FunctionResult<MonorepoProjectConfig | null>> {
+  ): FunctionResultPromise<MonorepoProjectConfig | null> {
     let success: boolean = false;
     let message: string = "";
     let data: MonorepoProjectConfig | null = null;
@@ -71,17 +72,17 @@ class MonorepoProjectProvider {
       data,
     };
   }
-  // #endregion
+  // #endregion - @parseConfig
 
-  // #region Parse PackageJson
+  // #region - @parsePackageJson
   /**
    * @param packageJson The package.json object to parse.
    * @description Parses and validates the provided package.json object for a monorepo project.
-   * @returns A promise that resolves to a FunctionResult containing the parsed package.json or an error message.
+   * @returns {FunctionResultPromise<MonorepoProjectPackageJson | null>} A promise that resolves to a FunctionResult containing the parsed package.json or an error message.
    */
   public async parsePackageJson(
     packageJson: MonorepoProjectPackageJson | null
-  ): Promise<FunctionResult<MonorepoProjectPackageJson | null>> {
+  ): FunctionResultPromise<MonorepoProjectPackageJson | null> {
     let success: boolean = false;
     let message: string = "";
     let data: MonorepoProjectPackageJson | null = null;
@@ -110,16 +111,14 @@ class MonorepoProjectProvider {
 
     return { success, message, data };
   }
-  // #endregion
+  // #endregion - @parsePackageJson
 
-  // #region Load Config
+  // #region - @getConfig
   /**
    * @description Loads the configuration for a monorepo project repository.
-   * @returns A promise that resolves to a FunctionResult containing the configuration or an error message.
+   * @returns {FunctionResultPromise<MonorepoProjectConfig | null>} A promise that resolves to a FunctionResult containing the monorepo project configuration or an error message.
    */
-  public async getConfig(): Promise<
-    FunctionResult<MonorepoProjectConfig | null>
-  > {
+  public async getConfig(): FunctionResultPromise<MonorepoProjectConfig | null> {
     let success: boolean = false;
     let message: string = "";
     let data: MonorepoProjectConfig | null = null;
@@ -153,17 +152,17 @@ class MonorepoProjectProvider {
       data,
     };
   }
-  // #endregion
+  // #endregion - @getConfig
 
-  // #region Initialize Config
+  // #region - @init
   /**
-   * @description Initializes the repository configuration for a monorepo project.
-   * @param userConfig The user-defined configuration for the monorepo project.
-   * @returns A promise that resolves to a FunctionResult indicating success or failure.
+   * @description Initializes the monorepo project configuration by merging user-provided settings with the default configuration.
+   * @param userConfig The user-provided configuration for the monorepo project.
+   * @returns {FunctionResultPromise<MonorepoProjectConfig | null>} A promise that resolves to a FunctionResult containing the initialized configuration or an error message.
    */
   public async init(
     userConfig: MonorepoProjectConfig
-  ): Promise<FunctionResult<MonorepoProjectConfig | null>> {
+  ): FunctionResultPromise<MonorepoProjectConfig | null> {
     let success: boolean = false;
     let message: string = "";
     let data: MonorepoProjectConfig | null = null;
@@ -209,15 +208,15 @@ class MonorepoProjectProvider {
 
     return { success, message, data };
   }
-  // #endregion
+  // #endregion - @init
 
-  // #region Get Packages
+  // #region - @getPackages
   /**
-   * @description Loads the package information for all packages in the monorepo workspaces.
-   * @returns A promise that resolves to a FunctionResult containing an array of package.json objects or an error message.
+   * @description Retrieves all packages in the monorepo workspaces defined in the root package.json.
+   * @returns {FunctionResultPromise<MonorepoProjectPackageJson[] | null>} A promise that resolves to a FunctionResult containing an array of package.json objects or an error message.
    */
-  public async getPackages(): Promise<
-    FunctionResult<MonorepoProjectPackageJson[] | null>
+  public async getPackages(): FunctionResultPromise<
+    MonorepoProjectPackageJson[] | null
   > {
     let success: boolean = false;
     let message: string = "";
@@ -284,7 +283,47 @@ class MonorepoProjectProvider {
 
     return { success, message, data };
   }
-  // #endregion
+  // #endregion - @getPackages
+
+  // #region - @getPackageByName
+  /**
+   * @description Retrieves a specific package by its name from the monorepo workspaces.
+   * @param packageName The name of the package to retrieve.
+   * @returns {FunctionResultPromise<MonorepoProjectPackageJson | null>} A promise that resolves to a FunctionResult containing the package.json object or an error message.
+   */
+  public async getPackageByName(
+    packageName: string
+  ): FunctionResultPromise<MonorepoProjectPackageJson | null> {
+    let success: boolean = false;
+    let message: string = "";
+    let data: MonorepoProjectPackageJson | null = null;
+
+    try {
+      // Load the packages
+      const packagesResult = await this.getPackages();
+      if (!packagesResult.success || !packagesResult.data) {
+        throw new Error(packagesResult.message);
+      }
+
+      // Find the package by name
+      const packageFound = packagesResult.data.find(
+        (pkg) => pkg.name === packageName
+      );
+      if (!packageFound) {
+        throw new Error(`Package "${packageName}" not found.`);
+      }
+
+      success = true;
+      message = "Package loaded successfully.";
+      data = packageFound;
+    } catch (error) {
+      success = false;
+      message = `Failed to load package: ${error instanceof Error ? error.message : String(error)}`;
+    }
+
+    return { success, message, data };
+  }
+  // #endregion - @getPackageByName
 }
 
 export default MonorepoProjectProvider;
