@@ -17,6 +17,9 @@ export const singleProjectConfigSchema = z.object({
     }),
     registry: z.url({ error: "Registry must be a valid URL" }).optional(),
   }),
+  repoType: z.enum(["monorepo", "single"], {
+    error: "Repository type must be either 'monorepo' or 'single'",
+  }),
 });
 
 /**

@@ -7,7 +7,7 @@
 import path from "node:path";
 
 import type {
-  FunctionResult,
+  FunctionResultPromise,
   SingleProjectConfig,
   SingleProjectPackageJson,
 } from "@/types";
@@ -26,19 +26,20 @@ class SingleProjectProvider {
       access: "public",
       registry: "https://registry.npmjs.org/",
     },
+    repoType: "single",
   };
 
   constructor() {}
 
-  // #region Parse Config
+  // #region - @parseConfig
   /**
-   * @param config The configuration object to parse.
    * @description Parses and validates the provided configuration object for a single project.
-   * @returns A promise that resolves to a FunctionResult containing the parsed configuration or an error message.
+   * @param config The configuration object to parse.
+   * @returns {FunctionResultPromise} A promise that resolves to a FunctionResult containing the parsed configuration or an error message.
    */
   private async parseConfig(
     config: SingleProjectConfig | null
-  ): Promise<FunctionResult<SingleProjectConfig | null>> {
+  ): FunctionResultPromise<SingleProjectConfig | null> {
     let success: boolean = false;
     let message: string = "";
     let data: SingleProjectConfig | null = null;
@@ -71,17 +72,17 @@ class SingleProjectProvider {
       data,
     };
   }
-  // #endregion
+  // #endregion - @parseConfig
 
-  // #region Parse PackageJson
+  // #region - @parsePackageJson
   /**
-   * @param packageJson The package.json object to parse.
    * @description Parses and validates the provided package.json object for a single project.
-   * @returns A promise that resolves to a FunctionResult containing the parsed package.json or an error message.
+   * @param packageJson The package.json object to parse.
+   * @returns {FunctionResultPromise<SingleProjectPackageJson | null>} A promise that resolves to a FunctionResult containing the parsed package.json or an error message.
    */
   public async parsePackageJson(
     packageJson: SingleProjectPackageJson | null
-  ): Promise<FunctionResult<SingleProjectPackageJson | null>> {
+  ): FunctionResultPromise<SingleProjectPackageJson | null> {
     let success: boolean = false;
     let message: string = "";
     let data: SingleProjectPackageJson | null = null;
@@ -110,16 +111,14 @@ class SingleProjectProvider {
 
     return { success, message, data };
   }
-  // #endregion
+  // #endregion - @parsePackageJson
 
-  // #region Load Config
+  // #region - @getConfig
   /**
    * @description Loads the configuration for a single project repository.
-   * @returns A promise that resolves to a FunctionResult containing the configuration or an error message.
+   * @returns {FunctionResultPromise<SingleProjectConfig | null>} A promise that resolves to a FunctionResult containing the configuration or an error message.
    */
-  public async getConfig(): Promise<
-    FunctionResult<SingleProjectConfig | null>
-  > {
+  public async getConfig(): FunctionResultPromise<SingleProjectConfig | null> {
     let success: boolean = false;
     let message: string = "";
     let data: SingleProjectConfig | null = null;
@@ -153,17 +152,17 @@ class SingleProjectProvider {
       data,
     };
   }
-  // #endregion
+  // #endregion - @getConfig
 
-  // #region Initialize Config
+  // #region - @init
   /**
    * @description Initializes the repository configuration for a single project or monorepo.
    * @param userConfig The user-defined configuration for the repository.
-   * @returns A promise that resolves to a FunctionResult indicating success or failure.
+   * @returns {FunctionResultPromise<SingleProjectConfig | null>} A promise that resolves to a FunctionResult containing the initialized configuration or an error message.
    */
   public async init(
     userConfig: SingleProjectConfig
-  ): Promise<FunctionResult<SingleProjectConfig | null>> {
+  ): FunctionResultPromise<SingleProjectConfig | null> {
     let success: boolean = false;
     let message: string = "";
     let data: SingleProjectConfig | null = null;
@@ -213,12 +212,10 @@ class SingleProjectProvider {
 
   // #region Get Package
   /**
-   * @returns A promise that resolves to a FunctionResult containing the package.json data or an error message.
    * @description Retrieves the package.json data for a single project repository.
+   * @returns {FunctionResultPromise<SingleProjectPackageJson | null>} A promise that resolves to a FunctionResult containing the package.json data or an error message.
    */
-  public async getPackage(): Promise<
-    FunctionResult<SingleProjectPackageJson | null>
-  > {
+  public async getPackage(): FunctionResultPromise<SingleProjectPackageJson | null> {
     let success: boolean = false;
     let message: string = "";
     let data: SingleProjectPackageJson | null = null;
