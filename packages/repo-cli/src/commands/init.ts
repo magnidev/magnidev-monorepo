@@ -51,8 +51,8 @@ function initCommand(program: Command): Command {
         // #region - Command Flow
         const userConfig = await prompts.group(
           {
-            // #region - @type
-            type: async () => {
+            // #region - @repoType
+            repoType: async () => {
               // Determine the type of repository based on user input or options
               if (monorepo) return "monorepo";
               if (single) return "single";
@@ -74,19 +74,19 @@ function initCommand(program: Command): Command {
                 ],
               });
             },
-            // #endregion - @type
+            // #endregion - @repoType
             // #region - @release
             release: async ({ results }) => {
               // If --yes is true, use default values
               if (shouldSkip) {
-                if (results.type === "monorepo") {
+                if (results.repoType === "monorepo") {
                   const { release } =
                     repositoryClient.monorepoProjectProvider.defaultConfig;
 
                   return release;
                 }
 
-                if (results.type === "single") {
+                if (results.repoType === "single") {
                   const { release } =
                     repositoryClient.singleProjectProvider.defaultConfig;
 
@@ -97,7 +97,7 @@ function initCommand(program: Command): Command {
                 onCommandFlowCancel("Invalid repository type selected.");
               }
 
-              if (results.type === "monorepo") {
+              if (results.repoType === "monorepo") {
                 const { release } =
                   repositoryClient.monorepoProjectProvider.defaultConfig;
 
@@ -127,7 +127,7 @@ function initCommand(program: Command): Command {
                 } satisfies MonorepoProjectConfig["release"];
               }
 
-              if (results.type === "single") {
+              if (results.repoType === "single") {
                 const { release } =
                   repositoryClient.singleProjectProvider.defaultConfig;
 
@@ -142,7 +142,7 @@ function initCommand(program: Command): Command {
             // #endregion - @release
             // #region - @workspaces
             workspaces: async ({ results }) => {
-              if (results.type === "monorepo") {
+              if (results.repoType === "monorepo") {
                 // If --yes is true, use default workspaces
                 if (shouldSkip) {
                   const { workspaces } =
@@ -182,7 +182,7 @@ function initCommand(program: Command): Command {
             // #endregion - @workspaces
             // #region - @publishConfig
             publishConfig: async ({ results }) => {
-              if (results.type === "single") {
+              if (results.repoType === "single") {
                 // If --yes is true, use default publishConfig
                 if (shouldSkip) {
                   const { publishConfig } =
@@ -252,7 +252,7 @@ function initCommand(program: Command): Command {
               if (!success) onCommandFlowCancel(message);
               return message;
             },
-            enabled: userConfig.type === "monorepo",
+            enabled: userConfig.repoType === "monorepo",
           },
           {
             title: "Initializing Single Project configuration...",
@@ -265,7 +265,7 @@ function initCommand(program: Command): Command {
               if (!success) onCommandFlowCancel(message);
               return message;
             },
-            enabled: userConfig.type === "single",
+            enabled: userConfig.repoType === "single",
           },
         ]);
 
