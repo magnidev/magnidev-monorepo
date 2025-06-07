@@ -7,6 +7,7 @@
 import path from "node:path";
 
 import type { FunctionResultPromise } from "@/types";
+import type { RepoInfo } from "@/types/repository";
 import MonorepoProjectProvider from "@/lib/providers/monorepoProjectProvider";
 import SingleProjectProvider from "@/lib/providers/singleProjectProvider";
 import GitClient from "@/lib/gitClient";
@@ -19,7 +20,6 @@ class Repository {
 
   constructor() {
     this.gitClient = new GitClient();
-
     this.monorepoProjectProvider = new MonorepoProjectProvider();
     this.singleProjectProvider = new SingleProjectProvider();
   }
@@ -44,27 +44,99 @@ class Repository {
 
       // Read and parse the root package.json file
       const rootPackageJson = await readJsonFile(rootPackageJsonPath);
+      if (!rootPackageJson || typeof rootPackageJson !== "object") {
+        throw new Error("Invalid package.json format");
+      }
 
       // Check if the root package.json has a "workspaces" field
-      if (rootPackageJson.workspaces) {
+      if (rootPackageJson.repoType === "monorepo") {
         success = true;
         message = "Monorepo detected";
         data = "monorepo";
       }
 
-      // If no "workspaces" field, it's a single repository
-      success = true;
-      message = "Single repository detected";
-      data = "single";
-
-      return {
-        success,
-        message,
-        data,
-      };
+      if (rootPackageJson.repoType === "single") {
+        success = true;
+        message = "Single repository detected";
+        data = "single";
+      }
     } catch (error: any) {
       success = false;
       message = "Failed to determine repository type";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
+    }
+
+    return {
+      success,
+      message,
+      data,
+    };
+  }
+
+  /**
+   * @description Retrieves information about the current repository, including the current branch, remote URL, owner, and repository name.
+   * @returns {FunctionResultPromise<{ currentBranch: string; remoteUrl: string; owner: string; repo: string } | null>}
+   */
+  public async getRepoInfo(): FunctionResultPromise<RepoInfo | null> {
+    let success: boolean = false;
+    let message: string = "";
+    let data: RepoInfo | null = null;
+
+    try {
+      // Determine the repository type
+      const repoTypeResult = await this.getRepoType();
+      if (!repoTypeResult.success || !repoTypeResult.data) {
+        throw new Error(repoTypeResult.message);
+      }
+
+      const [currentBranch, remoteUrl, ownerAndRepo, changes] =
+        await Promise.all([
+          this.gitClient.getCurrentBranch(),
+          this.gitClient.getRemoteUrl(),
+          this.gitClient.getOwnerAndRepo(),
+          this.gitClient.getChanges(),
+        ]);
+
+      if (
+        !currentBranch.success ||
+        !currentBranch.data ||
+        !remoteUrl.success ||
+        !remoteUrl.data ||
+        !ownerAndRepo.success ||
+        !ownerAndRepo.data ||
+        !changes.success ||
+        !changes.data
+      ) {
+        throw new Error("Failed to retrieve repository information");
+      }
+
+      const getChangesValue = (path: string, working_dir: string) => {
+        const changeInfo = this.gitClient.getChangeInfo(working_dir);
+        return `${path} ${changeInfo.consoleColor(`(${working_dir}) ${changeInfo.label}`)}`;
+      };
+
+      success = true;
+      message = "Repository information retrieved successfully";
+      data = {
+        repoType: repoTypeResult.data,
+        currentBranch: currentBranch.data,
+        remoteUrl: remoteUrl.data,
+        owner: ownerAndRepo.data.owner,
+        repo: ownerAndRepo.data.repo,
+        changes: {
+          behind: changes.data.behind,
+          ahead: changes.data.ahead,
+          files: changes.data.files.map((file) =>
+            getChangesValue(file.path, file.working_dir)
+          ),
+        },
+      };
+    } catch (error: any) {
+      success = false;
+      message = "Failed to retrieve repository information";
 
       if (error instanceof Error) {
         message = error.message;
