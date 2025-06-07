@@ -69,6 +69,7 @@ export function createValidSingleProjectConfig(): SingleProjectConfig {
     release: {
       tagFormat: "v${version}",
     },
+    repoType: "single",
   };
 }
 
@@ -82,6 +83,7 @@ export function createValidMonorepoConfig(): MonorepoProjectConfig {
       tagFormat: "${name}@{version}",
     },
     workspaces: ["packages/*"],
+    repoType: "monorepo",
   };
 }
 
