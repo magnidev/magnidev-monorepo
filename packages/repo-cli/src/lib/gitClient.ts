@@ -220,7 +220,7 @@ class GitClient {
 
       success = true;
       message = "Owner and repository name retrieved successfully";
-      data = { owner: match[1], repo: match[2] };
+      data = { owner: match[1], repo: match[2].replace(/\.git$/, "") }; // Remove .git if present
     } catch (error) {
       success = false;
       message = "Failed to get owner and repository name";
@@ -293,9 +293,9 @@ class GitClient {
         throw new Error("Failed to retrieve status or no files found");
       }
 
-      data = status.data;
       success = true;
       message = "Changes retrieved successfully";
+      data = status.data;
     } catch (error) {
       success = false;
       message = "Failed to get changes";
