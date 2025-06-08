@@ -211,8 +211,8 @@ function commitCommand(program: Command): Command {
                 message: "Enter a commit body (optional):",
                 initialValue: body,
                 validate: (value) => {
-                  if (value.trim().length > 0 && value.length < 10) {
-                    return "Commit body must be at least 10 characters long.";
+                  if (value.trim().length > 0 && !value.trim()) {
+                    return "Commit body cannot be empty.";
                   }
                   return undefined; // No error
                 },
