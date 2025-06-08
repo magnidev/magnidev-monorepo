@@ -212,12 +212,13 @@ async function displayAllInfo({
 
     const packagesInfo =
       await repositoryClient.monorepoProjectProvider.getPackages();
+
     if (!packagesInfo.success || !packagesInfo.data) {
       onCommandFlowCancel(packagesInfo.message);
     }
 
     for (const packageInfo of packagesInfo.data!) {
-      displayPackageInfo({
+      await displayPackageInfo({
         packageName: packageInfo.name,
         repoInfo,
         repositoryClient,
