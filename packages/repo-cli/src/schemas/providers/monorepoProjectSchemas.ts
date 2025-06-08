@@ -1,6 +1,6 @@
 import { z } from "zod/v4";
 
-import { packageJsonSchema } from "@schemas/config";
+import { packageJsonSchema } from "@/schemas/packageJsonSchema";
 
 /**
  * Schema for validating a monorepo configuration.
@@ -20,6 +20,9 @@ export const monorepoProjectConfigSchema = z.object({
       error: "Workspaces must be an array of non-empty strings",
     })
     .min(1),
+  repoType: z.enum(["monorepo", "single"], {
+    error: "Repository type must be either 'monorepo' or 'single'",
+  }),
 });
 
 /**

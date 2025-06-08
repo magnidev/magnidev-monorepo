@@ -1,16 +1,12 @@
-import * as prompts from "@clack/prompts";
 import { Command } from "commander";
+import prompts from "@clack/prompts";
 import colors from "picocolors";
 import z from "zod/v4";
 
 import type { MonorepoProjectConfig, SingleProjectConfig } from "@/types";
-import { intro } from "@/assets/intro";
-import MonorepoProjectProvider, {
-  defaultMonorepoProjectConfig,
-} from "@/lib/providers/monorepoProjectProvider";
-import SingleProjectProvider, {
-  defaultSingleProjectConfig,
-} from "@/lib/providers/singleProjectProvider";
+import RepositoryClient from "@/lib/repositoryClient";
+import { intro, outro } from "@/utils/intro";
+import { onCommandFlowCancel, onCommandFlowError } from "@/utils/events";
 
 type InitCommandOptions = {
   monorepo?: boolean;
@@ -26,7 +22,7 @@ function initCommand(program: Command): Command {
     .option("--single", "initialize a single project configuration")
     .option("-y, --yes", "skip prompts and use default values")
     .action(async (options: InitCommandOptions) => {
-      // #region Initialization
+      // #region - Initialization
       const { monorepo, single, yes: shouldSkip } = options;
 
       prompts.updateSettings({
@@ -43,217 +39,247 @@ function initCommand(program: Command): Command {
 
       // Validate that only one of --monorepo or --single is used
       if (monorepo && single) {
-        onCancel("Cannot use both --monorepo and --single options together.");
+        onCommandFlowCancel(
+          "Cannot use both --monorepo and --single options together."
+        );
       }
+      // #endregion - Initialization
 
-      const userConfig = await prompts.group(
-        {
-          // #region Repo Type
-          type: async () => {
-            // Determine the type of repository based on user input or options
-            if (monorepo) return "monorepo";
-            if (single) return "single";
-            if (shouldSkip) return "single"; // Default to single if --yes is used
+      try {
+        const repositoryClient = new RepositoryClient();
 
-            return await prompts.select({
-              message: "What kind of repository is this?",
-              options: [
-                {
-                  value: "monorepo",
-                  label: "Monorepo",
-                  hint: "A repository containing multiple packages/projects.",
-                },
-                {
-                  value: "single",
-                  label: "Single Repository",
-                  hint: "A single package/project repository.",
-                },
-              ],
-            });
-          },
-          // #endregion
-          // #region Release Config
-          release: async ({ results }) => {
-            // If --yes is true, use default values
-            if (shouldSkip) {
-              if (results.type === "monorepo")
-                return defaultMonorepoProjectConfig.release;
-              if (results.type === "single")
-                return defaultSingleProjectConfig.release;
+        // #region - Command Flow
+        const userConfig = await prompts.group(
+          {
+            // #region - @repoType
+            repoType: async () => {
+              // Determine the type of repository based on user input or options
+              if (monorepo) return "monorepo";
+              if (single) return "single";
+              if (shouldSkip) return "single"; // Default to single if --yes is used
+
+              return await prompts.select({
+                message: "What kind of repository is this?",
+                options: [
+                  {
+                    value: "monorepo",
+                    label: "Monorepo",
+                    hint: "A repository containing multiple packages/projects.",
+                  },
+                  {
+                    value: "single",
+                    label: "Single Repository",
+                    hint: "A single package/project repository.",
+                  },
+                ],
+              });
+            },
+            // #endregion - @repoType
+            // #region - @release
+            release: async ({ results }) => {
+              // If --yes is true, use default values
+              if (shouldSkip) {
+                if (results.repoType === "monorepo") {
+                  const { release } =
+                    repositoryClient.monorepoProjectProvider.defaultConfig;
+
+                  return release;
+                }
+
+                if (results.repoType === "single") {
+                  const { release } =
+                    repositoryClient.singleProjectProvider.defaultConfig;
+
+                  return release;
+                }
+
+                // If we reach here, it means an invalid type was selected
+                onCommandFlowCancel("Invalid repository type selected.");
+              }
+
+              if (results.repoType === "monorepo") {
+                const { release } =
+                  repositoryClient.monorepoProjectProvider.defaultConfig;
+
+                const versioningStrategy = (await prompts.select({
+                  message: "Select a release versioningStrategy:",
+                  options: [
+                    {
+                      value: "fixed",
+                      label: "Fixed",
+                      hint: "All packages are released together.",
+                    },
+                    {
+                      value: "independent",
+                      label: "Independent",
+                      hint: "Each package is released independently.",
+                    },
+                  ],
+                  initialValue: "independent",
+                  maxItems: 1,
+                })) as MonorepoProjectConfig["release"]["versioningStrategy"];
+
+                if (prompts.isCancel(versioningStrategy)) onCommandFlowCancel();
+
+                return {
+                  tagFormat: release.tagFormat,
+                  versioningStrategy: versioningStrategy,
+                } satisfies MonorepoProjectConfig["release"];
+              }
+
+              if (results.repoType === "single") {
+                const { release } =
+                  repositoryClient.singleProjectProvider.defaultConfig;
+
+                return {
+                  tagFormat: release.tagFormat,
+                } satisfies SingleProjectConfig["release"];
+              }
 
               // If we reach here, it means an invalid type was selected
-              return onCancel("Invalid repository type selected.");
-            }
+              onCommandFlowCancel("Invalid repository type.");
+            },
+            // #endregion - @release
+            // #region - @workspaces
+            workspaces: async ({ results }) => {
+              if (results.repoType === "monorepo") {
+                // If --yes is true, use default workspaces
+                if (shouldSkip) {
+                  const { workspaces } =
+                    repositoryClient.monorepoProjectProvider.defaultConfig;
 
-            // #region Monorepo Project
-            if (results.type === "monorepo") {
-              const versioningStrategy = (await prompts.select({
-                message: "Select a release versioningStrategy:",
-                options: [
-                  {
-                    value: "fixed",
-                    label: "Fixed",
-                    hint: "All packages are released together.",
-                  },
-                  {
-                    value: "independent",
-                    label: "Independent",
-                    hint: "Each package is released independently.",
-                  },
-                ],
-                initialValue: "independent",
-                maxItems: 1,
-              })) as MonorepoProjectConfig["release"]["versioningStrategy"];
-
-              if (prompts.isCancel(versioningStrategy)) onCancel();
-
-              return {
-                tagFormat: defaultMonorepoProjectConfig.release.tagFormat,
-                versioningStrategy: versioningStrategy,
-              } satisfies MonorepoProjectConfig["release"];
-            }
-            // #endregion
-
-            // #region  Single Project
-            if (results.type === "single") {
-              return {
-                tagFormat: defaultSingleProjectConfig.release.tagFormat,
-              } satisfies SingleProjectConfig["release"];
-            }
-            // #endregion
-
-            // If we reach here, it means an invalid type was selected
-            return onCancel("Invalid repository type selected.");
-          },
-          // #endregion
-          // #region Workspaces Config
-          workspaces: async ({ results }) => {
-            if (results.type === "monorepo") {
-              // If --yes is true, use default workspaces
-              if (shouldSkip) return defaultMonorepoProjectConfig.workspaces;
-
-              const validateWorkspace = (value: string) => {
-                if (value.trim() === "") {
-                  return undefined; // Allow empty input to finish
+                  return workspaces;
                 }
-                if (z.string().min(1).safeParse(value).success) {
-                  return undefined; // No error means valid workspace
+
+                const validateWorkspace = (value: string) => {
+                  if (value.trim() === "") {
+                    return undefined; // Allow empty input to finish
+                  }
+                  if (z.string().min(1).safeParse(value).success) {
+                    return undefined; // No error means valid workspace
+                  }
+                  return "Workspace name must be at least 1 character long.";
+                };
+
+                const workspaces = (await prompts.text({
+                  message:
+                    "Enter a workspace pattern (space-separated if multiple):",
+                  placeholder: "e.g., packages/*",
+                  initialValue: "packages/*",
+                  validate: validateWorkspace,
+                })) as string;
+
+                if (prompts.isCancel(workspaces)) onCommandFlowCancel();
+
+                const parsedWorkspaces = workspaces.split(" ").filter(Boolean);
+
+                return Array.from(parsedWorkspaces);
+              }
+
+              // If we reach here, it means an invalid type was selected
+              return undefined; // Return undefined for not-handled cases
+            },
+            // #endregion - @workspaces
+            // #region - @publishConfig
+            publishConfig: async ({ results }) => {
+              if (results.repoType === "single") {
+                // If --yes is true, use default publishConfig
+                if (shouldSkip) {
+                  const { publishConfig } =
+                    repositoryClient.singleProjectProvider.defaultConfig;
+
+                  return publishConfig;
                 }
-                return "Workspace name must be at least 1 character long.";
-              };
 
-              const workspaces = (await prompts.text({
-                message:
-                  "Enter a workspace pattern (space-separated if multiple):",
-                placeholder: "e.g., packages/*",
-                initialValue: "packages/*",
-                validate: validateWorkspace,
-              })) as string;
+                const validateRegistry = (value: string) => {
+                  if (z.url().safeParse(value).success) {
+                    return undefined; // No error means valid URL
+                  }
+                  return "Invalid registry URL format.";
+                };
 
-              const parsedWorkspaces = workspaces.split(" ").filter(Boolean);
+                // single project specific configuration
+                const access = (await prompts.select({
+                  message: "Select the access level for publishing:",
+                  options: [
+                    {
+                      value: "public",
+                      label: "Public",
+                      hint: "Package will be publicly accessible.",
+                    },
+                    {
+                      value: "restricted",
+                      label: "Restricted",
+                      hint: "Package will be restricted to specific users or teams.",
+                    },
+                  ],
+                  initialValue: "public",
+                  maxItems: 1,
+                })) as SingleProjectConfig["publishConfig"]["access"];
 
-              return Array.from(parsedWorkspaces);
-            }
+                if (prompts.isCancel(access)) onCommandFlowCancel();
 
-            return undefined; // No workspaces for single projects
+                const registry = (await prompts.text({
+                  message: "Enter the npm registry URL:",
+                  placeholder: "e.g., https://registry.npmjs.org/",
+                  initialValue: "https://registry.npmjs.org/",
+                  validate: validateRegistry,
+                })) as SingleProjectConfig["publishConfig"]["registry"];
+
+                if (prompts.isCancel(registry)) onCommandFlowCancel();
+              }
+
+              return undefined; // Return undefined for not-handled cases
+            },
+            // #endregion - @publishConfig
           },
-          // #endregion
-          // #region Publish Config
-          publishConfig: async ({ results }) => {
-            if (results.type === "single") {
-              // If --yes is true, use default publishConfig
-              if (shouldSkip) return defaultSingleProjectConfig.publishConfig;
+          {
+            onCancel: () => onCommandFlowCancel("Initialization cancelled."),
+          }
+        );
+        // #endregion - Command Flow
 
-              const validateRegistry = (value: string) => {
-                if (z.url().safeParse(value).success) {
-                  return undefined; // No error means valid URL
-                }
-                return "Invalid registry URL format.";
-              };
+        // #region - Business Logic
+        const tasks = await prompts.tasks([
+          {
+            title: "Initializing Monorepo configuration...",
+            task: async () => {
+              const client = repositoryClient.monorepoProjectProvider;
 
-              // single project specific configuration
-              const access = (await prompts.select({
-                message: "Select the access level for publishing:",
-                options: [
-                  {
-                    value: "public",
-                    label: "Public",
-                    hint: "Package will be publicly accessible.",
-                  },
-                  {
-                    value: "restricted",
-                    label: "Restricted",
-                    hint: "Package will be restricted to specific users or teams.",
-                  },
-                ],
-                initialValue: "public",
-                maxItems: 1,
-              })) as SingleProjectConfig["publishConfig"]["access"];
-
-              if (prompts.isCancel(access)) onCancel();
-
-              const registry = (await prompts.text({
-                message: "Enter the npm registry URL:",
-                placeholder: "e.g., https://registry.npmjs.org/",
-                initialValue: "https://registry.npmjs.org/",
-                validate: validateRegistry,
-              })) as SingleProjectConfig["publishConfig"]["registry"];
-
-              if (prompts.isCancel(registry)) onCancel();
-            }
-
-            return undefined; // No publishConfig for monorepo projects
+              const { success, message } = await client.init(
+                userConfig as MonorepoProjectConfig
+              );
+              if (!success) onCommandFlowCancel(message);
+              return message;
+            },
+            enabled: userConfig.repoType === "monorepo",
           },
-        },
-        {
-          onCancel: () => onCancel("Initialization cancelled."),
+          {
+            title: "Initializing Single Project configuration...",
+            task: async () => {
+              const client = repositoryClient.singleProjectProvider;
+
+              const { success, message } = await client.init(
+                userConfig as SingleProjectConfig
+              );
+              if (!success) onCommandFlowCancel(message);
+              return message;
+            },
+            enabled: userConfig.repoType === "single",
+          },
+        ]);
+
+        if (prompts.isCancel(tasks)) {
+          onCommandFlowCancel("Initialization cancelled.");
         }
-      );
-      // #endregion
 
-      // #region Business Logic
-      const tasks = await prompts.tasks([
-        {
-          title: "Initializing Monorepo configuration...",
-          task: async () => {
-            const client = new MonorepoProjectProvider();
+        prompts.outro(outro);
 
-            const { success, message } = await client.init(
-              userConfig as MonorepoProjectConfig
-            );
-            if (!success) onCancel(message);
-            return message;
-          },
-          enabled: userConfig.type === "monorepo",
-        },
-        {
-          title: "Initializing Single Project configuration...",
-          task: async () => {
-            const client = new SingleProjectProvider();
-
-            const { success, message } = await client.init(
-              userConfig as SingleProjectConfig
-            );
-            if (!success) onCancel(message);
-            return message;
-          },
-          enabled: userConfig.type === "single",
-        },
-      ]);
-
-      if (prompts.isCancel(tasks)) {
-        onCancel("Initialization cancelled.");
+        // #endregion Business Logic
+      } catch (error: any) {
+        onCommandFlowError(error as Error);
       }
-
-      prompts.outro("🚀 Repo CLI by @magnidev, happy coding!");
-
-      // #endregion
     });
-}
-
-function onCancel(message?: string) {
-  prompts.cancel(message || "Operation cancelled.");
-  process.exit(1); // Exit the process with an error code
 }
 
 export default initCommand;

@@ -6,32 +6,40 @@
 
 import path from "node:path";
 
-import type { FunctionResult, SingleProjectConfig } from "@/types";
+import type {
+  FunctionResultPromise,
+  SingleProjectConfig,
+  SingleProjectPackageJson,
+} from "@/types";
+import {
+  singleProjectConfigSchema,
+  singleProjectPackageJsonSchema,
+} from "@/schemas/providers/singleProjectSchemas";
 import { dirExists, readJsonFile, writeJsonFile } from "@/utils/files";
-import { singleProjectConfigSchema } from "@/schemas/providers/singleProject";
-
-export const defaultSingleProjectConfig: SingleProjectConfig = {
-  release: {
-    tagFormat: "v${version}",
-  },
-  publishConfig: {
-    access: "public",
-    registry: "https://registry.npmjs.org/",
-  },
-};
 
 class SingleProjectProvider {
+  defaultConfig: SingleProjectConfig = {
+    release: {
+      tagFormat: "v${version}",
+    },
+    publishConfig: {
+      access: "public",
+      registry: "https://registry.npmjs.org/",
+    },
+    repoType: "single",
+  };
+
   constructor() {}
 
-  // #region Parsing Config
+  // #region - @parseConfig
   /**
-   * @param config The configuration object to parse.
    * @description Parses and validates the provided configuration object for a single project.
-   * @returns A promise that resolves to a FunctionResult containing the parsed configuration or an error message.
+   * @param config The configuration object to parse.
+   * @returns {FunctionResultPromise} A promise that resolves to a FunctionResult containing the parsed configuration or an error message.
    */
   private async parseConfig(
     config: SingleProjectConfig | null
-  ): Promise<FunctionResult<SingleProjectConfig | null>> {
+  ): FunctionResultPromise<SingleProjectConfig | null> {
     let success: boolean = false;
     let message: string = "";
     let data: SingleProjectConfig | null = null;
@@ -64,16 +72,53 @@ class SingleProjectProvider {
       data,
     };
   }
-  // #endregion
+  // #endregion - @parseConfig
 
-  // #region Loading Config
+  // #region - @parsePackageJson
+  /**
+   * @description Parses and validates the provided package.json object for a single project.
+   * @param packageJson The package.json object to parse.
+   * @returns {FunctionResultPromise<SingleProjectPackageJson | null>} A promise that resolves to a FunctionResult containing the parsed package.json or an error message.
+   */
+  public async parsePackageJson(
+    packageJson: SingleProjectPackageJson | null
+  ): FunctionResultPromise<SingleProjectPackageJson | null> {
+    let success: boolean = false;
+    let message: string = "";
+    let data: SingleProjectPackageJson | null = null;
+
+    try {
+      if (!packageJson) {
+        throw new Error("No package.json provided.");
+      }
+
+      const parsedPackageJson =
+        await singleProjectPackageJsonSchema.safeParseAsync(packageJson);
+
+      if (!parsedPackageJson.success) {
+        throw new Error(
+          `Package.json validation failed: ${parsedPackageJson.error.message}`
+        );
+      }
+
+      success = true;
+      message = "Package information loaded successfully.";
+      data = parsedPackageJson.data;
+    } catch (error) {
+      success = false;
+      message = `Failed to load package information: ${error instanceof Error ? error.message : String(error)}`;
+    }
+
+    return { success, message, data };
+  }
+  // #endregion - @parsePackageJson
+
+  // #region - @getConfig
   /**
    * @description Loads the configuration for a single project repository.
-   * @returns A promise that resolves to a FunctionResult containing the configuration or an error message.
+   * @returns {FunctionResultPromise<SingleProjectConfig | null>} A promise that resolves to a FunctionResult containing the configuration or an error message.
    */
-  public async getConfig(): Promise<
-    FunctionResult<SingleProjectConfig | null>
-  > {
+  public async getConfig(): FunctionResultPromise<SingleProjectConfig | null> {
     let success: boolean = false;
     let message: string = "";
     let data: SingleProjectConfig | null = null;
@@ -107,17 +152,17 @@ class SingleProjectProvider {
       data,
     };
   }
-  // #endregion
+  // #endregion - @getConfig
 
-  // #region Initializing Config
+  // #region - @init
   /**
    * @description Initializes the repository configuration for a single project or monorepo.
    * @param userConfig The user-defined configuration for the repository.
-   * @returns A promise that resolves to a FunctionResult indicating success or failure.
+   * @returns {FunctionResultPromise<SingleProjectConfig | null>} A promise that resolves to a FunctionResult containing the initialized configuration or an error message.
    */
   public async init(
     userConfig: SingleProjectConfig
-  ): Promise<FunctionResult<SingleProjectConfig | null>> {
+  ): FunctionResultPromise<SingleProjectConfig | null> {
     let success: boolean = false;
     let message: string = "";
     let data: SingleProjectConfig | null = null;
@@ -159,6 +204,52 @@ class SingleProjectProvider {
     } catch (error) {
       success = false;
       message = `Failed to initialize repository configuration: ${error instanceof Error ? error.message : String(error)}`;
+    }
+
+    return { success, message, data };
+  }
+  // #endregion
+
+  // #region Get Package
+  /**
+   * @description Retrieves the package.json data for a single project repository.
+   * @returns {FunctionResultPromise<SingleProjectPackageJson | null>} A promise that resolves to a FunctionResult containing the package.json data or an error message.
+   */
+  public async getPackage(): FunctionResultPromise<SingleProjectPackageJson | null> {
+    let success: boolean = false;
+    let message: string = "";
+    let data: SingleProjectPackageJson | null = null;
+
+    try {
+      // Load the root package.json file
+      const rootPackageJsonPath = path.join(process.cwd(), "package.json");
+      if (!dirExists(rootPackageJsonPath)) {
+        throw new Error("No package.json found in the current directory");
+      }
+
+      // Read the root package.json file
+      const rootPackageJsonContent = await readJsonFile(rootPackageJsonPath);
+      if (!rootPackageJsonContent) {
+        throw new Error("Failed to read package.json");
+      }
+
+      // Parse and validate the package.json content
+      const rootPackageJsonParsed = await this.parsePackageJson(
+        rootPackageJsonContent
+      );
+
+      if (!rootPackageJsonParsed.success || !rootPackageJsonParsed.data) {
+        throw new Error(
+          `Package.json validation failed: ${rootPackageJsonParsed.message}`
+        );
+      }
+
+      success = true;
+      message = "Package information loaded successfully.";
+      data = rootPackageJsonParsed.data;
+    } catch (error) {
+      success = false;
+      message = `Failed to load package information: ${error instanceof Error ? error.message : String(error)}`;
     }
 
     return { success, message, data };

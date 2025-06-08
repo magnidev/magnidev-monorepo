@@ -22,7 +22,10 @@
     "lint": "turbo run lint",
     "format:check": "turbo run format:check",
     "format:write": "turbo run format:write",
-    "test": "turbo run test"
+    "test": "turbo run test",
+    "repo-cli": "pnpm dlx @magnidev/repo-cli@latest",
+    "repo-cli:canary": "pnpm dlx @magnidev/repo-cli@canary",
+    "repo-cli:dev": "cd packages/repo-cli && pnpm build && cd ../.. && node ./packages/repo-cli/dist/main.js"
   },
   "workspaces": [
     "packages/*"
@@ -32,6 +35,7 @@
     "repositoryUrl": "https://github.com/magnidev/magnidev-monorepo",
     "versioningStrategy": "independent"
   },
+  "repoType": "monorepo",
   "devDependencies": {
     "@magnidev/repo-cli": "^1.0.2",
     "@typescript-eslint/eslint-plugin": "^8.33.1",

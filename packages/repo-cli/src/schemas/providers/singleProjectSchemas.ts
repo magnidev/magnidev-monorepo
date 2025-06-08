@@ -1,6 +1,6 @@
 import { z } from "zod/v4";
 
-import { packageJsonSchema } from "@schemas/config";
+import { packageJsonSchema } from "@/schemas/packageJsonSchema";
 
 /**
  * Schema for validating a single project configuration.
@@ -16,6 +16,9 @@ export const singleProjectConfigSchema = z.object({
       error: "Publish access must be either 'public' or 'restricted'",
     }),
     registry: z.url({ error: "Registry must be a valid URL" }).optional(),
+  }),
+  repoType: z.enum(["monorepo", "single"], {
+    error: "Repository type must be either 'monorepo' or 'single'",
   }),
 });
 
