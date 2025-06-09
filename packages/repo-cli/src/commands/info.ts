@@ -105,6 +105,7 @@ function infoCommand(program: Command): Command {
     });
 }
 
+// #region - @displayPackageInfo
 async function displayPackageInfo({
   packageName,
   repoInfo,
@@ -193,7 +194,9 @@ async function displayPackageInfo({
     return;
   }
 }
+// #endregion - @displayPackageInfo
 
+// #region - @displayAllInfo
 async function displayAllInfo({
   repoInfo,
   repositoryClient,
@@ -226,7 +229,9 @@ async function displayAllInfo({
     }
   }
 }
+// #endregion - @displayAllInfo
 
+// #region - @displayRepoInfo
 async function displayRepoInfo({
   repoType,
   currentBranch,
@@ -282,7 +287,9 @@ async function displayRepoInfo({
     "Repository Information"
   );
 }
+// #endregion - @displayRepoInfo
 
+// #region - @displayInfo
 /**
  * @description Formats and displays an array of label-value pairs as a string. Each field is displayed on a new line with the label in green.
  * @param sections - An array of sections, each containing a title and fields.
@@ -320,5 +327,6 @@ function displayInfo(
   });
   return formattedSections.join("\n");
 }
+// #endregion - @displayInfo
 
 export default infoCommand;
