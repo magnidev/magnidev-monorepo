@@ -5,11 +5,17 @@
  */
 
 import { Octokit } from "@octokit/rest";
+import semver from "semver";
+
+import GitClient from "@lib/gitClient";
 
 class GitHubClient {
   public client: Octokit | null = null;
+  public gitClient: GitClient;
 
-  constructor() {}
+  constructor() {
+    this.gitClient = new GitClient();
+  }
 
   // #region - @init
   /**
@@ -147,6 +153,105 @@ class GitHubClient {
     }
   }
   // #endregion - @checkRepoExists
+
+  // #region - @suggestNextVersions
+  /**
+   * @description Suggests the next versions for a given version.
+   * @param currentVersion The current version.
+   * @returns An array of suggested next versions.
+   */
+  private suggestNextVersions(
+    currentVersion: string,
+    versionIdentifier?: string
+  ): string[] {
+    const versions: string[] = [];
+
+    try {
+      const patch = semver.inc(currentVersion, "patch");
+      const minor = semver.inc(currentVersion, "minor");
+      const major = semver.inc(currentVersion, "major");
+      const prerelease = semver.inc(
+        currentVersion,
+        "prerelease",
+        versionIdentifier || "beta"
+      );
+      if (patch) {
+        versions.push(patch);
+      }
+      if (minor) {
+        versions.push(minor);
+      }
+      if (major) {
+        versions.push(major);
+      }
+      if (prerelease) {
+        versions.push(prerelease);
+      }
+    } catch (error) {
+      // Fallback if semver parsing fails
+      versions.push("1.0.0");
+    }
+
+    return versions;
+  }
+  // #endregion - @suggestNextVersions
+
+  // #region - @getCommitsByType
+  /**
+   * @description Groups commits by their conventional commit type.
+   * @returns Commits grouped by type.
+   */
+  private async groupCommitsByType(): Promise<Record<string, any[]>> {
+    const commits = await this.gitClient.getCommits();
+    if (!commits || !commits.data) {
+      throw new Error(commits.message);
+    }
+
+    const grouped: Record<string, any[]> = {};
+
+    for (const commit of commits.data) {
+      const message = commit.message;
+      const match = message.match(
+        /^(feat|fix|docs|style|refactor|perf|test|chore)(\([^)]*\))?:/
+      );
+
+      let type = "other";
+      if (match) {
+        type = match[1];
+      }
+
+      if (!grouped[type]) {
+        grouped[type] = [];
+      }
+      grouped[type].push(commit);
+    }
+
+    return grouped;
+  }
+  // #endregion - @getCommitsByType
+
+  // #region - @getCommitTypeLabel
+  /**
+   * @description Gets a human-readable label for a commit type.
+   * @param type The commit type.
+   * @returns The human-readable label.
+   */
+  private getCommitTypeLabel(type: string): string {
+    const labels: Record<string, string> = {
+      feat: "🚀 Features",
+      fix: "🐛 Bug Fixes",
+      perf: "⚡ Performance Improvements",
+      refactor: "♻️ Code Refactoring",
+      docs: "📚 Documentation",
+      style: "💄 Styles",
+      test: "🧪 Tests",
+      chore: "🔧 Chores",
+      other: "📝 Other Changes",
+    };
+
+    return labels[type] || "📝 Other Changes";
+  }
+  // #endregion - @getCommitTypeLabel
 }
 
 export default GitHubClient;
