@@ -7,7 +7,6 @@ import initCommand from "@commands/init";
 import infoCommand from "@commands/info";
 import commitCommand from "@commands/commit";
 import releaseCommand from "@commands/release";
-import publishCommand from "@commands/publish";
 import versionCommand from "@commands/version";
 
 // Display the intro message
@@ -26,7 +25,6 @@ initCommand(program);
 infoCommand(program);
 commitCommand(program);
 releaseCommand(program);
-publishCommand(program);
 versionCommand(program);
 
 // Handle unknown commands
