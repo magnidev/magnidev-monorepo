@@ -33,9 +33,9 @@
   "release": {
     "tagFormat": "${name}@${version}",
     "repositoryUrl": "https://github.com/magnidev/magnidev-monorepo",
-    "versioningStrategy": "independent"
+    "versioningStrategy": "independent",
+    "preReleaseIdentifier": "canary"
   },
-  "repoType": "monorepo",
   "devDependencies": {
     "@magnidev/repo-cli": "^1.0.2",
     "@typescript-eslint/eslint-plugin": "^8.34.0",
