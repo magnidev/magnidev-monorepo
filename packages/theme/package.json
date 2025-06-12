@@ -21,7 +21,7 @@
     "./tailwindcss": "./src/tailwindcss/styles.css"
   },
   "files": [
-    "src",
+    "src/tailwindcss/styles.css",
     "README.md",
     "LICENSE",
     "CHANGELOG.md",
