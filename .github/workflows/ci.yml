@@ -16,7 +16,7 @@ concurrency:
 jobs:
   scripts:
     if: github.repository_owner == 'magnidev'
-    uses: magnidev/automation/.github/workflows/run.yml@main
+    uses: magnidev/automation/.github/workflows/run.yml@main # Reuse the run workflow from the magnidev/automation repository
     secrets: inherit
     with:
       commands: >
