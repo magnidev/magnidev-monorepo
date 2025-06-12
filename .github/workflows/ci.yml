@@ -2,45 +2,27 @@ name: CI
 
 on:
   push:
-    branches: ["*"]
-
+    branches:
+      - main # Run on pushes to the main branch
   pull_request:
-    branches: ["*"]
+    branches:
+      - main # Run on pull requests targeting the main branch
 
+# Automatically cancel in-progress actions on the same branch
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
-  install-and-check:
-    name: Install and Check
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22.x # Use the latest LTS version of Node.js
-          registry-url: https://registry.npmjs.org/
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Lint
-        run: pnpm lint
-
-      - name: Format check
-        run: pnpm format:check
-
-      - name: Build
-        run: pnpm build
-
-      - name: Test
-        run: pnpm test
+  scripts:
+    if: github.repository_owner == 'magnidev'
+    uses: magnidev/automation/.github/workflows/run.yml@main
+    secrets: inherit
+    with:
+      commands: >
+        [
+          "lint",
+          "format:check",
+          "build",
+          "test"
+        ]
