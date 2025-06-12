@@ -47,8 +47,8 @@ export const packageJsonSchema = z.object({
 
   publishConfig: z
     .object({
-      access: z.enum(["public", "restricted"]),
-      registry: z.url().optional(),
+      access: z.enum(["public", "restricted"]).default("public"),
+      registry: z.url().default("https://registry.npmjs.org/"),
     })
     .optional(),
 });

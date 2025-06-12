@@ -5,6 +5,7 @@
  */
 
 import path from "node:path";
+import semver from "semver";
 
 import type { FunctionResultPromise } from "@/types";
 import type { RepoInfo } from "@/types/repository";
@@ -24,6 +25,7 @@ class Repository {
     this.singleProjectProvider = new SingleProjectProvider();
   }
 
+  // #region - @getRepoType
   /**
    * @description Get the type of repository (single or monorepo) based on the presence of a workspaces field in package.json.
    * @returns {FunctionResultPromise<"single" | "monorepo" | null>} The type of repository or null if not determined.
@@ -49,17 +51,19 @@ class Repository {
       }
 
       // Check if the root package.json has a "workspaces" field
-      if (rootPackageJson.repoType === "monorepo") {
-        success = true;
+      const isMonorepo =
+        rootPackageJson.workspaces !== null &&
+        Array.isArray(rootPackageJson.workspaces);
+
+      if (isMonorepo) {
         message = "Monorepo detected";
         data = "monorepo";
-      }
-
-      if (rootPackageJson.repoType === "single") {
-        success = true;
+      } else {
         message = "Single repository detected";
         data = "single";
       }
+
+      success = true;
     } catch (error: any) {
       success = false;
       message = "Failed to determine repository type";
@@ -75,7 +79,9 @@ class Repository {
       data,
     };
   }
+  // #endregion - @getRepoType
 
+  // #region - @getRepoInfo
   /**
    * @description Retrieves information about the current repository, including the current branch, remote URL, owner, and repository name.
    * @returns {FunctionResultPromise<{ currentBranch: string; remoteUrl: string; owner: string; repo: string } | null>}
@@ -149,6 +155,49 @@ class Repository {
       data,
     };
   }
+  // #endregion - @getRepoInfo
+
+  // #region - @suggestNextVersions
+  /**
+   * @description Suggests the next versions for a given version.
+   * @param currentVersion The current version.
+   * @returns An array of suggested next versions.
+   */
+  public suggestNextVersions(
+    currentVersion: string,
+    versionIdentifier?: string
+  ): string[] {
+    const versions: string[] = [];
+
+    try {
+      const patch = semver.inc(currentVersion, "patch");
+      const minor = semver.inc(currentVersion, "minor");
+      const major = semver.inc(currentVersion, "major");
+      const prerelease = semver.inc(
+        currentVersion,
+        "prerelease",
+        versionIdentifier || "beta"
+      );
+      if (patch) {
+        versions.push(patch);
+      }
+      if (minor) {
+        versions.push(minor);
+      }
+      if (major) {
+        versions.push(major);
+      }
+      if (prerelease) {
+        versions.push(prerelease);
+      }
+    } catch (error) {
+      // Fallback if semver parsing fails
+      versions.push("1.0.0");
+    }
+
+    return versions;
+  }
+  // #endregion - @suggestNextVersions
 }
 
 export default Repository;

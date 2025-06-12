@@ -32,7 +32,6 @@ function versionCommand(program: Command): Command {
       try {
         // #region - Initialize Clients
         const repositoryClient = new RepositoryClient();
-        const gitClient = repositoryClient.gitClient;
 
         // Check if the repository is a monorepo or single project
         const repoType = await repositoryClient.getRepoType();
@@ -79,6 +78,47 @@ function versionCommand(program: Command): Command {
             onCommandFlowCancel("Invalid repository type.");
           },
           // #endregion - @packageName
+
+          // #region - @version
+          version: async ({ results }) => {
+            let packageInfo: any | null = null;
+
+            const packageName = results.packageName as string;
+
+            if (repoType.data === "single") {
+              packageInfo =
+                await repositoryClient.singleProjectProvider.getPackage();
+            }
+
+            if (repoType.data === "monorepo") {
+              packageInfo =
+                await repositoryClient.monorepoProjectProvider.getPackageByName(
+                  packageName
+                );
+            }
+
+            if (!packageInfo.success || !packageInfo.data) {
+              onCommandFlowCancel(packageInfo.message);
+            }
+
+            const versions = repositoryClient.suggestNextVersions(
+              packageInfo.data!.version
+            );
+
+            if (versions.length === 0) {
+              onCommandFlowCancel("No valid versions found.");
+            }
+
+            return await prompts.select({
+              message: `Select the version to bump for package ${packageName}:`,
+              options: versions.map((version) => ({
+                label: version,
+                value: version,
+              })),
+              maxItems: 1,
+            });
+          },
+          // #endregion - @version
         });
         // #endregion - Command Flow
       } catch (error: any) {

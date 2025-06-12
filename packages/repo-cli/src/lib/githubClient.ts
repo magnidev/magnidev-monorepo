@@ -5,7 +5,6 @@
  */
 
 import { Octokit } from "@octokit/rest";
-import semver from "semver";
 
 import GitClient from "@lib/gitClient";
 
@@ -153,48 +152,6 @@ class GitHubClient {
     }
   }
   // #endregion - @checkRepoExists
-
-  // #region - @suggestNextVersions
-  /**
-   * @description Suggests the next versions for a given version.
-   * @param currentVersion The current version.
-   * @returns An array of suggested next versions.
-   */
-  private suggestNextVersions(
-    currentVersion: string,
-    versionIdentifier?: string
-  ): string[] {
-    const versions: string[] = [];
-
-    try {
-      const patch = semver.inc(currentVersion, "patch");
-      const minor = semver.inc(currentVersion, "minor");
-      const major = semver.inc(currentVersion, "major");
-      const prerelease = semver.inc(
-        currentVersion,
-        "prerelease",
-        versionIdentifier || "beta"
-      );
-      if (patch) {
-        versions.push(patch);
-      }
-      if (minor) {
-        versions.push(minor);
-      }
-      if (major) {
-        versions.push(major);
-      }
-      if (prerelease) {
-        versions.push(prerelease);
-      }
-    } catch (error) {
-      // Fallback if semver parsing fails
-      versions.push("1.0.0");
-    }
-
-    return versions;
-  }
-  // #endregion - @suggestNextVersions
 
   // #region - @getCommitsByType
   /**

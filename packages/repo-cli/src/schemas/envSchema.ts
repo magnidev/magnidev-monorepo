@@ -1,3 +1,3 @@
 import { z } from "zod/v4";
 
-export const envSchema = z.object({});
+export const releaseEnvSchema = z.object({});

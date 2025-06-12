@@ -3,7 +3,8 @@ import path from "node:path";
 import { tmpdir } from "node:os";
 import { vi } from "vitest";
 
-import type { SingleProjectConfig, MonorepoProjectConfig } from "@/types";
+import type { MonorepoProjectConfig } from "@/types/providers/monorepoProject";
+import type { SingleProjectConfig } from "@/types/providers/singleProject";
 
 /**
  * Creates a temporary directory for testing
@@ -67,9 +68,8 @@ export function createValidSingleProjectConfig(): SingleProjectConfig {
       access: "public",
     },
     release: {
-      tagFormat: "v${version}",
+      preReleaseIdentifier: "canary", // Default identifier for pre-release versions
     },
-    repoType: "single",
   };
 }
 
@@ -81,9 +81,9 @@ export function createValidMonorepoConfig(): MonorepoProjectConfig {
     release: {
       versioningStrategy: "independent",
       tagFormat: "${name}@{version}",
+      preReleaseIdentifier: "canary", // Default identifier for pre-release versions
     },
     workspaces: ["packages/*"],
-    repoType: "monorepo",
   };
 }
 

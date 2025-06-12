@@ -12,7 +12,8 @@ import simpleGit, {
 } from "simple-git";
 import colors from "picocolors";
 
-import type { Commit, FunctionResultPromise } from "@/types";
+import type { FunctionResultPromise } from "@/types";
+import type { Commit } from "@/types/github";
 
 class GitClient {
   private client: SimpleGit;

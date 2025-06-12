@@ -7,11 +7,11 @@
 import path from "node:path";
 import fg from "fast-glob";
 
+import type { FunctionResultPromise } from "@/types";
 import type {
-  FunctionResultPromise,
   MonorepoProjectConfig,
   MonorepoProjectPackageJson,
-} from "@/types";
+} from "@/types/providers/monorepoProject";
 import {
   monorepoProjectConfigSchema,
   monorepoProjectPackageJsonSchema,
@@ -24,9 +24,9 @@ class MonorepoProjectProvider {
     release: {
       tagFormat: "${name}@${version}",
       versioningStrategy: "independent",
+      preReleaseIdentifier: "canary", // Default identifier for pre-release versions
     },
     workspaces: ["packages/*"],
-    repoType: "monorepo",
   };
 
   constructor() {}

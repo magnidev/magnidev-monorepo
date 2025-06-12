@@ -7,18 +7,19 @@ import { packageJsonSchema } from "@/schemas/packageJsonSchema";
  */
 export const singleProjectConfigSchema = z.object({
   release: z.object({
-    tagFormat: z.string().regex(/^.*\$\{version\}.*$/, {
-      error: "Tag format must include ${version} placeholder",
+    preReleaseIdentifier: z.string().default("canary").meta({
+      description: "Identifier for pre-release versions. Default is 'canary'.",
     }),
   }),
   publishConfig: z.object({
-    access: z.enum(["public", "restricted"], {
-      error: "Publish access must be either 'public' or 'restricted'",
-    }),
-    registry: z.url({ error: "Registry must be a valid URL" }).optional(),
-  }),
-  repoType: z.enum(["monorepo", "single"], {
-    error: "Repository type must be either 'monorepo' or 'single'",
+    access: z
+      .enum(["public", "restricted"], {
+        error: "Publish access must be either 'public' or 'restricted'",
+      })
+      .default("public"),
+    registry: z
+      .url({ error: "Registry must be a valid URL" })
+      .default("https://registry.npmjs.org/"),
   }),
 });
 

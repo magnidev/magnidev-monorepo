@@ -6,11 +6,11 @@
 
 import path from "node:path";
 
+import type { FunctionResultPromise } from "@/types";
 import type {
-  FunctionResultPromise,
   SingleProjectConfig,
   SingleProjectPackageJson,
-} from "@/types";
+} from "@/types/providers/singleProject";
 import {
   singleProjectConfigSchema,
   singleProjectPackageJsonSchema,
@@ -20,13 +20,12 @@ import { dirExists, readJsonFile, writeJsonFile } from "@/utils/files";
 class SingleProjectProvider {
   defaultConfig: SingleProjectConfig = {
     release: {
-      tagFormat: "v${version}",
+      preReleaseIdentifier: "canary", // Default identifier for pre-release versions
     },
     publishConfig: {
       access: "public",
       registry: "https://registry.npmjs.org/",
     },
-    repoType: "single",
   };
 
   constructor() {}
@@ -208,9 +207,9 @@ class SingleProjectProvider {
 
     return { success, message, data };
   }
-  // #endregion
+  // #endregion - @init
 
-  // #region Get Package
+  // #region - @getPackage
   /**
    * @description Retrieves the package.json data for a single project repository.
    * @returns {FunctionResultPromise<SingleProjectPackageJson | null>} A promise that resolves to a FunctionResult containing the package.json data or an error message.
@@ -254,7 +253,7 @@ class SingleProjectProvider {
 
     return { success, message, data };
   }
-  // #endregion
+  // #endregion - @getPackage
 }
 
 export default SingleProjectProvider;
