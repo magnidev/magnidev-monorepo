@@ -1,11 +1,11 @@
 {
   "name": "@magnidev/theme",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "license": "ISC",
   "description": "Theme for Magni Development.",
   "author": {
-    "name": "fermeridamagni <Magni Developer>",
-    "url": "https://www.magnideveloper.com"
+    "name": "fermeridamagni <Magni Development>",
+    "url": "https://www.magni.dev"
   },
   "repository": {
     "url": "git+https://github.com/magnidev/magnidev-monorepo.git",
@@ -16,18 +16,12 @@
   "bugs": {
     "url": "https://github.com/magnidev/magnidev-monorepo/issues"
   },
-  "homepage": "https://magnideveloper.com/en/docs/developers/packages/theme/getting-started/introduction",
-  "scripts": {
-    "build": "tsc -p tsconfig.json"
-  },
-  "types": "",
+  "homepage": "https://www.magni.dev/en/docs/developers/packages/theme/getting-started/introduction",
   "exports": {
-    ".": "./dist/index.js",
-    "./styles": "./dist/tailwindcss/styles.css"
+    "./tailwindcss": "./src/tailwindcss/styles.css"
   },
-  "main": "dist/index.js",
   "files": [
-    "dist",
+    "src",
     "README.md",
     "LICENSE",
     "CHANGELOG.md",
@@ -42,9 +36,5 @@
   },
   "dependencies": {
     "tw-animate-css": "^1.3.3"
-  },
-  "devDependencies": {
-    "@magnidev/typescript-config": "workspace:*",
-    "typescript": "5.8.3"
   }
 }
