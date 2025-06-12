@@ -11,7 +11,7 @@ on:
 # Automatically cancel in-progress actions on the same branch
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }} # Cancel in-progress runs for branches other than main
 
 jobs:
   scripts:
