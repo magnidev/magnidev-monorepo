@@ -19,7 +19,10 @@ jobs:
     # This is intentional for internal use. Forks or external contributions will not execute this workflow.
     if: github.repository_owner == 'magnidev'
     uses: magnidev/automation/.github/workflows/run.yml@main # Reuse the run workflow from the magnidev/automation repository
-    secrets: "inherit" # Inherit secrets from the parent workflow
+    secrets:
+      BOT_APP_ID: ${{ secrets.BOT_APP_ID }}
+      BOT_PRIVATE_KEY: ${{ secrets.BOT_PRIVATE_KEY }}
+
     with:
       commands: >
         [
