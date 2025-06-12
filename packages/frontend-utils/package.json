@@ -5,7 +5,7 @@
   "description": "Utility functions for frontend development",
   "author": {
     "name": "fermeridamagni <Magni Development>",
-    "url": "https://www.magnideveloper.com"
+    "url": "https://www.magni.dev"
   },
   "repository": {
     "url": "git+https://github.com/magnidev/magnidev-monorepo.git",
@@ -16,7 +16,7 @@
   "bugs": {
     "url": "https://github.com/magnidev/magnidev-monorepo/issues"
   },
-  "homepage": "https://magnideveloper.com/en/docs/developers/packages/frontend-utils/getting-started/introduction",
+  "homepage": "https://www.magni.dev/en/docs/developers/packages/frontend-utils/getting-started/introduction",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "ts-node src/index.ts"
@@ -38,11 +38,11 @@
     "registry": "https://registry.npmjs.org/"
   },
   "peerDependencies": {
-    "tailwindcss": "4.1.8"
+    "tailwindcss": "4.1.10"
   },
   "dependencies": {
     "clsx": "^2.1.1",
-    "tailwind-merge": "^3.3.0"
+    "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
     "@magnidev/typescript-config": "workspace:*",
