@@ -30,3 +30,4 @@ jobs:
           "build",
           "test"
         ]
+      # The 'commands' input specifies the commands to run in the CI workflow.
