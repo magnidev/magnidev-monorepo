@@ -1,7 +1,11 @@
 name: preview package
 
 on:
-  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "packages/**"
 
 jobs:
   preview:
@@ -13,4 +17,4 @@ jobs:
       bot_app_id: ${{ secrets.bot_app_id }}
       bot_private_key: ${{ secrets.bot_private_key }}
     with:
-      publish_directory: "./packages/*"
+      publish_directories: "./packages/*"
