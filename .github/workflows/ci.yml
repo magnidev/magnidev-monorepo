@@ -8,9 +8,8 @@ on:
     branches:
       - main # Run on pull requests targeting the main branch
 
-# Automatically cancel in-progress actions on the same branch
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }} # Group runs by workflow name and pull request number or branch ref
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }} # Cancel in-progress runs for branches other than main
 
 jobs:
@@ -22,7 +21,6 @@ jobs:
     secrets:
       BOT_APP_ID: ${{ secrets.BOT_APP_ID }}
       BOT_PRIVATE_KEY: ${{ secrets.BOT_PRIVATE_KEY }}
-
     with:
       commands: >
         [
@@ -31,4 +29,3 @@ jobs:
           "build",
           "test"
         ]
-      # The 'commands' input specifies the commands to run in the CI workflow.
