@@ -11,6 +11,11 @@ concurrency:
   group: auto-assign-${{ github.ref }} # Group runs by the current ref to avoid conflicts
   cancel-in-progress: true
 
+permissions:
+  issues: write
+  pull-requests: write
+  contents: read
+
 jobs:
   auto-assign:
     # Restrict workflow execution to repositories owned by 'magnidev'.
