@@ -79,6 +79,6 @@ This project is licensed under the MIT License. See the [LICENSE](https://github
 
 ## 💬 Questions & Support
 
-For help, open an issue, start a discussion in the repository or contact us directly at [support@magni.dev](mailto:support@magni.dev).
+For help, open an issue, start a discussion in the repository or contact us directly at [contact@magni.dev](mailto:contact@magni.dev).
 
 ---
