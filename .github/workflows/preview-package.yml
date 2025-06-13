@@ -1,9 +1,6 @@
 name: preview package
 
 on:
-  pull_request:
-    branches:
-      - main # run on pull requests targeting the main branch
   workflow_dispatch:
 
 jobs:
