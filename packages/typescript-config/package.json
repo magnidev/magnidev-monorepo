@@ -1,11 +1,11 @@
 {
   "name": "@magnidev/typescript-config",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "license": "ISC",
   "description": "TypeScript configuration files for the Magni Development monorepo.",
   "author": {
     "name": "fermeridamagni <Magni Development>",
-    "url": "https://magnideveloper.com"
+    "url": "https://magni.dev"
   },
   "repository": {
     "type": "git",
@@ -20,7 +20,7 @@
   "bugs": {
     "url": "https://github.com/magnidev/magnidev-monorepo/issues"
   },
-  "homepage": "https://magnideveloper.com/en/docs/developers/packages/typescript-config/getting-started/introduction",
+  "homepage": "https://magni.dev/en/docs/developers/packages/typescript-config/getting-started/introduction",
   "exports": {
     "./node-base": "./src/tsconfig.node-base.json",
     "./node-library": "./src/tsconfig.node-library.json"

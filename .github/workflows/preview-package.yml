@@ -1,0 +1,20 @@
+name: preview package
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "packages/**"
+
+jobs:
+  preview:
+    # restrict workflow execution to repositories owned by 'magnidev'.
+    # this is intentional for internal use. forks or external contributions will not execute this workflow.
+    if: github.repository_owner == 'magnidev'
+    uses: magnidev/automation/.github/workflows/preview-package.yml@main
+    secrets:
+      bot_app_id: ${{ secrets.bot_app_id }}
+      bot_private_key: ${{ secrets.bot_private_key }}
+    with:
+      publish_directories: "./packages/*"

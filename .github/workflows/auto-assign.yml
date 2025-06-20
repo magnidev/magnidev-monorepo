@@ -8,7 +8,7 @@ on:
     types: [opened, reopened]
 
 concurrency:
-  group: auto-assign-${{ github.ref }}
+  group: auto-assign-${{ github.ref }} # Group runs by the current ref to avoid conflicts
   cancel-in-progress: true
 
 jobs:
@@ -22,7 +22,7 @@ jobs:
 
     steps:
       - name: "Auto-assign issue"
-        uses: pozil/auto-assign-issue@v1
+        uses: pozil/auto-assign-issue@v2
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           assignees: fermeridamagni
