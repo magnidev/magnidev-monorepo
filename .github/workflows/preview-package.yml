@@ -13,8 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       package_name: ${{ steps.detect.outputs.package_name }}
-      version: ${{ steps.detect.outputs.version }}
-      is_prerelease: ${{ steps.detect.outputs.is_prerelease }}
 
     steps:
       - name: Checkout code
@@ -36,4 +34,4 @@ jobs:
       bot_app_id: ${{ secrets.bot_app_id }}
       bot_private_key: ${{ secrets.bot_private_key }}
     with:
-      publish_directories: ./packages/${{ needs.detect-package.outputs.package_name }}/
+      publish_directories: "./packages/${{ needs.detect-package.outputs.package_name }}/"
