@@ -27,6 +27,7 @@
     "repo-cli:canary": "pnpm dlx @magnidev/repo-cli@canary",
     "repo-cli:dev": "cd packages/repo-cli && pnpm build && cd ../.. && node ./packages/repo-cli/dist/main.js"
   },
+  "repoType": "monorepo",
   "workspaces": [
     "packages/*"
   ],
