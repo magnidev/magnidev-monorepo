@@ -8,6 +8,11 @@ import type { SingleProjectConfig } from "@/types/providers/singleProject";
 import RepositoryClient from "@lib/repositoryClient";
 import { intro, outro } from "@utils/intro";
 import { onCommandFlowCancel, onCommandFlowError } from "@utils/events";
+import {
+  generateSingleProjectWorkflow,
+  generateMonorepoWorkflow,
+  generateWorkflowSetupInstructions,
+} from "@utils/workflowGenerator";
 
 type InitCommandOptions = {
   monorepo?: boolean;
@@ -257,16 +262,24 @@ function initCommand(program: Command): Command {
 
                 if (prompts.isCancel(registry)) onCommandFlowCancel();
               }
-
               return undefined; // Return undefined for not-handled cases
             },
             // #endregion - @publishConfig
+
+            // #region - @createGitHubWorkflow
+            createGitHubWorkflow: async () => {
+              return await prompts.confirm({
+                message:
+                  "Do you want to create GitHub workflows for automated releases?",
+                initialValue: true,
+              });
+            },
+            // #endregion - @createGitHubWorkflow
           },
           {
             onCancel: () => onCommandFlowCancel("Initialization cancelled."),
           }
-        );
-        // #endregion - Command Flow
+        ); // #endregion - Command Flow
 
         // #region - Business Logic
         const tasks = await prompts.tasks([
@@ -296,10 +309,54 @@ function initCommand(program: Command): Command {
             },
             enabled: userConfig.repoType === "single",
           },
+          {
+            title: "Creating GitHub workflow for monorepo...",
+            task: async () => {
+              const { success, message } = await generateMonorepoWorkflow();
+              if (!success) onCommandFlowCancel(message);
+              return message;
+            },
+            enabled:
+              userConfig.createGitHubWorkflow === true &&
+              userConfig.repoType === "monorepo",
+          },
+          {
+            title: "Creating GitHub workflow for single project...",
+            task: async () => {
+              const { success, message } =
+                await generateSingleProjectWorkflow();
+              if (!success) onCommandFlowCancel(message);
+              return message;
+            },
+            enabled:
+              userConfig.createGitHubWorkflow === true &&
+              userConfig.repoType === "single",
+          },
+          {
+            title: "Creating workflow setup instructions...",
+            task: async () => {
+              const { success, message } =
+                await generateWorkflowSetupInstructions();
+              if (!success) onCommandFlowCancel(message);
+              return message;
+            },
+            enabled: userConfig.createGitHubWorkflow === true,
+          },
         ]);
-
         if (prompts.isCancel(tasks)) {
           onCommandFlowCancel("Initialization cancelled.");
+        }
+
+        // Show additional info if workflows were created
+        if (userConfig.createGitHubWorkflow) {
+          prompts.note(
+            "GitHub workflows have been created! Check GITHUB_WORKFLOW_SETUP.md for setup instructions.",
+            "Next Steps"
+          );
+          prompts.note(
+            "Don't forget to:\n• Add NPM_TOKEN to your GitHub repository secrets\n• Enable workflow permissions in repository settings",
+            "Important"
+          );
         }
 
         prompts.outro(outro);
