@@ -15,9 +15,9 @@ import type {
 import {
   monorepoProjectConfigSchema,
   monorepoProjectPackageJsonSchema,
-} from "@/schemas/providers/monorepoProjectSchemas";
-import { dirExists, readJsonFile, writeJsonFile } from "@/utils/files";
-import { ignorePaths } from "@/utils/ignorePaths";
+} from "@schemas/providers/monorepoProjectSchemas";
+import { dirExists, readJsonFile, writeJsonFile } from "@utils/files";
+import { ignorePaths } from "@utils/ignorePaths";
 
 class MonorepoProjectProvider {
   public defaultConfig: MonorepoProjectConfig = {

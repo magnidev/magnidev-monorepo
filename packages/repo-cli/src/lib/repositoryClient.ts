@@ -9,10 +9,10 @@ import semver from "semver";
 
 import type { FunctionResultPromise } from "@/types";
 import type { RepoInfo } from "@/types/repository";
-import MonorepoProjectProvider from "@/lib/providers/monorepoProjectProvider";
-import SingleProjectProvider from "@/lib/providers/singleProjectProvider";
-import GitClient from "@/lib/gitClient";
-import { dirExists, readJsonFile } from "@/utils/files";
+import MonorepoProjectProvider from "@lib/providers/monorepoProjectProvider";
+import SingleProjectProvider from "@lib/providers/singleProjectProvider";
+import GitClient from "@lib/gitClient";
+import { dirExists, readJsonFile } from "@utils/files";
 
 class Repository {
   public gitClient: GitClient;

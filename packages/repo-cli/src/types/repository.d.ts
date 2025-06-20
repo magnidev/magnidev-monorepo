@@ -13,3 +13,8 @@ export type RepoInfo = {
     files: string[];
   };
 };
+
+/**
+ * @description Type representing the versioning strategy for a repository.
+ */
+export type VersionType = "patch" | "minor" | "major" | "prerelease";

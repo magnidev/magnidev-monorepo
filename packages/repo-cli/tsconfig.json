@@ -11,7 +11,8 @@
       "@schemas/*": ["src/schemas/*"],
       "@types/*": ["src/types/*"],
       "@utils/*": ["src/utils/*"],
-      "@config/*": ["src/config/*"]
+      "@config/*": ["src/config/*"],
+      "@services/*": ["src/lib/services/*"]
     } /* Path mappings for module resolution */,
     "declarationDir": "./dist/types" /* Output directory for generated declaration files */,
     "tsBuildInfoFile": "./node_modules/.cache/tsconfig.tsbuildinfo" /* Specify the path to .tsbuildinfo incremental compilation file. */,

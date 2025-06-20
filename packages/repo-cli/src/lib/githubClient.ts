@@ -21,7 +21,7 @@ class GitHubClient {
    * @description Initializes the GitHub client with a personal access token.
    * @param token - The personal access token for GitHub API authentication.
    */
-  private init(token: string) {
+  public init(token: string) {
     this.client = new Octokit({ auth: token });
   }
   // #endregion - @init
@@ -55,7 +55,6 @@ class GitHubClient {
     return response.data;
   }
   // #endregion - @getRepoInfo
-
   // #region - @createRelease
   /**
    * @description Creates a new release for a repository.
@@ -64,6 +63,7 @@ class GitHubClient {
    * @param tagName - The name of the tag to create the release for.
    * @param releaseName - The name of the release.
    * @param body - The body content of the release.
+   * @param prerelease - Whether this is a prerelease.
    * @returns A promise that resolves to the created release information.
    */
   public async createRelease(
@@ -71,7 +71,8 @@ class GitHubClient {
     repo: string,
     tagName: string,
     releaseName: string,
-    body: string
+    body: string,
+    prerelease: boolean = false
   ): Promise<any> {
     if (!this.client) {
       throw new Error("GitHub client is not initialized");
@@ -82,6 +83,7 @@ class GitHubClient {
       tag_name: tagName,
       name: releaseName,
       body,
+      prerelease,
     });
     return response.data;
   }

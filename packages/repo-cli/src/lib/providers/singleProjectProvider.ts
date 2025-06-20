@@ -14,8 +14,8 @@ import type {
 import {
   singleProjectConfigSchema,
   singleProjectPackageJsonSchema,
-} from "@/schemas/providers/singleProjectSchemas";
-import { dirExists, readJsonFile, writeJsonFile } from "@/utils/files";
+} from "@schemas/providers/singleProjectSchemas";
+import { dirExists, readJsonFile, writeJsonFile } from "@utils/files";
 
 class SingleProjectProvider {
   defaultConfig: SingleProjectConfig = {
