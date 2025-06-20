@@ -2,9 +2,9 @@ import { Command } from "commander";
 import prompts from "@clack/prompts";
 import colors from "picocolors";
 
-import RepositoryClient from "@/lib/repositoryClient";
-import { intro, outro } from "@/utils/intro";
-import { onCommandFlowCancel, onCommandFlowError } from "@/utils/events";
+import RepositoryClient from "@lib/repositoryClient";
+import { intro, outro } from "@utils/intro";
+import { onCommandFlowCancel, onCommandFlowError } from "@utils/events";
 
 type CommitCommandOptions = {
   scope?: string;
@@ -257,7 +257,7 @@ function commitCommand(program: Command): Command {
         // #endregion - Command Flow
 
         // #region - Business Logic
-        const tasks = prompts.tasks([
+        const tasks = await prompts.tasks([
           {
             title: "Constructing commit message",
             task: async () => {

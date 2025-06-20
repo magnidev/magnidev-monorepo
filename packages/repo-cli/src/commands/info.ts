@@ -3,11 +3,11 @@ import { Command } from "commander";
 import colors from "picocolors";
 
 import type { RepoInfo } from "@/types/repository";
-import RepositoryClient from "@/lib/repositoryClient";
-import GitClient from "@/lib/gitClient";
-import { intro } from "@/utils/intro";
-import { onCommandFlowCancel, onCommandFlowError } from "@/utils/events";
-import { MonorepoProjectPackageJson } from "@/types";
+import type { MonorepoProjectPackageJson } from "@/types/providers/monorepoProject";
+import RepositoryClient from "@lib/repositoryClient";
+import GitClient from "@lib/gitClient";
+import { intro } from "@utils/intro";
+import { onCommandFlowCancel, onCommandFlowError } from "@utils/events";
 
 type InfoCommandOptions = {
   package?: string;
@@ -105,6 +105,7 @@ function infoCommand(program: Command): Command {
     });
 }
 
+// #region - @displayPackageInfo
 async function displayPackageInfo({
   packageName,
   repoInfo,
@@ -193,7 +194,9 @@ async function displayPackageInfo({
     return;
   }
 }
+// #endregion - @displayPackageInfo
 
+// #region - @displayAllInfo
 async function displayAllInfo({
   repoInfo,
   repositoryClient,
@@ -226,7 +229,9 @@ async function displayAllInfo({
     }
   }
 }
+// #endregion - @displayAllInfo
 
+// #region - @displayRepoInfo
 async function displayRepoInfo({
   repoType,
   currentBranch,
@@ -282,7 +287,9 @@ async function displayRepoInfo({
     "Repository Information"
   );
 }
+// #endregion - @displayRepoInfo
 
+// #region - @displayInfo
 /**
  * @description Formats and displays an array of label-value pairs as a string. Each field is displayed on a new line with the label in green.
  * @param sections - An array of sections, each containing a title and fields.
@@ -320,5 +327,6 @@ function displayInfo(
   });
   return formattedSections.join("\n");
 }
+// #endregion - @displayInfo
 
 export default infoCommand;

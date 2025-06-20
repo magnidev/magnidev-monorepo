@@ -6,11 +6,11 @@
 
 import path from "node:path";
 
+import type { FunctionResultPromise } from "@/types";
 import type {
-  FunctionResultPromise,
   SingleProjectConfig,
   SingleProjectPackageJson,
-} from "@/types";
+} from "@/types/providers/singleProject";
 import {
   singleProjectConfigSchema,
   singleProjectPackageJsonSchema,
@@ -21,6 +21,7 @@ class SingleProjectProvider {
   defaultConfig: SingleProjectConfig = {
     release: {
       tagFormat: "v${version}",
+      preReleaseIdentifier: "canary",
     },
     publishConfig: {
       access: "public",

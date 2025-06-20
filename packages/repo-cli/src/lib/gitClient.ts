@@ -12,7 +12,8 @@ import simpleGit, {
 } from "simple-git";
 import colors from "picocolors";
 
-import type { Commit, FunctionResultPromise } from "@/types";
+import type { FunctionResultPromise } from "@/types";
+import type { Commit } from "@/types/github";
 
 class GitClient {
   private client: SimpleGit;
@@ -432,7 +433,72 @@ class GitClient {
   }
   // #endregion - @pushChanges
 
-  // #region - @getCommitMessage
+  // #region - @createTag
+  /**
+   * @description Creates a tag in the git repository.
+   * @param tagName The name of the tag to create.
+   * @param message The message associated with the tag (optional).
+   * @returns {FunctionResultPromise} A promise that resolves to a FunctionResultPromise indicating success or failure.
+   */
+  public async createTag(
+    tagName: string,
+    tagMessage: string
+  ): FunctionResultPromise {
+    let success: boolean = false;
+    let message: string = "";
+
+    try {
+      await this.client.addAnnotatedTag(tagName, tagMessage);
+
+      success = true;
+      message = "Tag created successfully";
+    } catch (error) {
+      success = false;
+      message = "Failed to create tag";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
+    }
+
+    return {
+      success,
+      message,
+    };
+  }
+  // #endregion - @createTag
+
+  // #region - @pushTags
+  /**
+   * @description Pushes tags to the remote repository.
+   * @returns {FunctionResultPromise} A promise that resolves to a FunctionResultPromise indicating success or failure.
+   */
+  public async pushTags(): FunctionResultPromise {
+    let success: boolean = false;
+    let message: string = "";
+
+    try {
+      await this.client.pushTags();
+
+      success = true;
+      message = "Tags pushed to remote repository successfully";
+    } catch (error) {
+      success = false;
+      message = "Failed to push tags";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
+    }
+
+    return {
+      success,
+      message,
+    };
+  }
+  // #endregion - @pushTags
+
+  // #region - @getChangeInfo
   /**
    * @description Returns the console color and label for a given change type.
    * @param type - The type of change (e.g., "a" for added, "m" for modified).
@@ -475,7 +541,7 @@ class GitClient {
 
     return { consoleColor, label };
   };
-  // #endregion - @getCommitMessage
+  // #endregion - @getChangeInfo
 
   // #region - @constructCommitMessage
   /**

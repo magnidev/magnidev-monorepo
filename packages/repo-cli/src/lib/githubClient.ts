@@ -6,17 +6,22 @@
 
 import { Octokit } from "@octokit/rest";
 
+import GitClient from "@lib/gitClient";
+
 class GitHubClient {
   public client: Octokit | null = null;
+  public gitClient: GitClient;
 
-  constructor() {}
+  constructor() {
+    this.gitClient = new GitClient();
+  }
 
   // #region - @init
   /**
    * @description Initializes the GitHub client with a personal access token.
    * @param token - The personal access token for GitHub API authentication.
    */
-  private init(token: string) {
+  public init(token: string) {
     this.client = new Octokit({ auth: token });
   }
   // #endregion - @init
@@ -50,7 +55,6 @@ class GitHubClient {
     return response.data;
   }
   // #endregion - @getRepoInfo
-
   // #region - @createRelease
   /**
    * @description Creates a new release for a repository.
@@ -59,6 +63,7 @@ class GitHubClient {
    * @param tagName - The name of the tag to create the release for.
    * @param releaseName - The name of the release.
    * @param body - The body content of the release.
+   * @param prerelease - Whether this is a prerelease.
    * @returns A promise that resolves to the created release information.
    */
   public async createRelease(
@@ -66,7 +71,8 @@ class GitHubClient {
     repo: string,
     tagName: string,
     releaseName: string,
-    body: string
+    body: string,
+    prerelease: boolean = false
   ): Promise<any> {
     if (!this.client) {
       throw new Error("GitHub client is not initialized");
@@ -77,6 +83,7 @@ class GitHubClient {
       tag_name: tagName,
       name: releaseName,
       body,
+      prerelease,
     });
     return response.data;
   }
@@ -147,6 +154,63 @@ class GitHubClient {
     }
   }
   // #endregion - @checkRepoExists
+
+  // #region - @getCommitsByType
+  /**
+   * @description Groups commits by their conventional commit type.
+   * @returns Commits grouped by type.
+   */
+  private async groupCommitsByType(): Promise<Record<string, any[]>> {
+    const commits = await this.gitClient.getCommits();
+    if (!commits || !commits.data) {
+      throw new Error(commits.message);
+    }
+
+    const grouped: Record<string, any[]> = {};
+
+    for (const commit of commits.data) {
+      const message = commit.message;
+      const match = message.match(
+        /^(feat|fix|docs|style|refactor|perf|test|chore)(\([^)]*\))?:/
+      );
+
+      let type = "other";
+      if (match) {
+        type = match[1];
+      }
+
+      if (!grouped[type]) {
+        grouped[type] = [];
+      }
+      grouped[type].push(commit);
+    }
+
+    return grouped;
+  }
+  // #endregion - @getCommitsByType
+
+  // #region - @getCommitTypeLabel
+  /**
+   * @description Gets a human-readable label for a commit type.
+   * @param type The commit type.
+   * @returns The human-readable label.
+   */
+  private getCommitTypeLabel(type: string): string {
+    const labels: Record<string, string> = {
+      feat: "🚀 Features",
+      fix: "🐛 Bug Fixes",
+      perf: "⚡ Performance Improvements",
+      refactor: "♻️ Code Refactoring",
+      docs: "📚 Documentation",
+      style: "💄 Styles",
+      test: "🧪 Tests",
+      chore: "🔧 Chores",
+      other: "📝 Other Changes",
+    };
+
+    return labels[type] || "📝 Other Changes";
+  }
+  // #endregion - @getCommitTypeLabel
 }
 
 export default GitHubClient;

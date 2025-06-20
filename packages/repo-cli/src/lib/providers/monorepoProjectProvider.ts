@@ -7,23 +7,24 @@
 import path from "node:path";
 import fg from "fast-glob";
 
+import type { FunctionResultPromise } from "@/types";
 import type {
-  FunctionResultPromise,
   MonorepoProjectConfig,
   MonorepoProjectPackageJson,
-} from "@/types";
+} from "@/types/providers/monorepoProject";
 import {
   monorepoProjectConfigSchema,
   monorepoProjectPackageJsonSchema,
-} from "@/schemas/providers/monorepoProjectSchemas";
-import { dirExists, readJsonFile, writeJsonFile } from "@/utils/files";
-import { ignorePaths } from "@/utils/ignorePaths";
+} from "@schemas/providers/monorepoProjectSchemas";
+import { dirExists, readJsonFile, writeJsonFile } from "@utils/files";
+import { ignorePaths } from "@utils/ignorePaths";
 
 class MonorepoProjectProvider {
   public defaultConfig: MonorepoProjectConfig = {
     release: {
       tagFormat: "${name}@${version}",
       versioningStrategy: "independent",
+      preReleaseIdentifier: "canary", // Default identifier for pre-release versions
     },
     workspaces: ["packages/*"],
     repoType: "monorepo",

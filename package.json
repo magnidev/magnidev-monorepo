@@ -27,19 +27,20 @@
     "repo-cli:canary": "pnpm dlx @magnidev/repo-cli@canary",
     "repo-cli:dev": "cd packages/repo-cli && pnpm build && cd ../.. && node ./packages/repo-cli/dist/main.js"
   },
+  "repoType": "monorepo",
   "workspaces": [
     "packages/*"
   ],
   "release": {
     "tagFormat": "${name}@${version}",
     "repositoryUrl": "https://github.com/magnidev/magnidev-monorepo",
-    "versioningStrategy": "independent"
+    "versioningStrategy": "independent",
+    "preReleaseIdentifier": "canary"
   },
-  "repoType": "monorepo",
   "devDependencies": {
     "@magnidev/repo-cli": "^1.0.2",
-    "@typescript-eslint/eslint-plugin": "^8.33.1",
-    "@typescript-eslint/parser": "^8.33.1",
+    "@typescript-eslint/eslint-plugin": "^8.34.0",
+    "@typescript-eslint/parser": "^8.34.0",
     "eslint": "^9.28.0",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-prettier": "^5.4.1",
