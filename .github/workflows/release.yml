@@ -4,7 +4,7 @@ on:
   push:
     tags:
       - "v*" # Fixed versioning: v1.0.0
-      - "*@*" # Independent versioning: @org/package@1.0.0
+      - "@*@*" # Independent versioning: @org/package@1.0.0
 
 env:
   NODE_VERSION: "18"
