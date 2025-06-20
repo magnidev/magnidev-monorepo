@@ -17,6 +17,7 @@ export default defineConfig({
       "@schemas": resolve(__dirname, "./src/schemas"),
       "@utils": resolve(__dirname, "./src/utils"),
       "@config": resolve(__dirname, "./src/config"),
+      "@services": resolve(__dirname, "./src/lib/services"),
     },
   },
 });
