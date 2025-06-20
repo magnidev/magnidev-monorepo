@@ -14,18 +14,20 @@ import type {
 import {
   singleProjectConfigSchema,
   singleProjectPackageJsonSchema,
-} from "@schemas/providers/singleProjectSchemas";
-import { dirExists, readJsonFile, writeJsonFile } from "@utils/files";
+} from "@/schemas/providers/singleProjectSchemas";
+import { dirExists, readJsonFile, writeJsonFile } from "@/utils/files";
 
 class SingleProjectProvider {
   defaultConfig: SingleProjectConfig = {
     release: {
-      preReleaseIdentifier: "canary", // Default identifier for pre-release versions
+      tagFormat: "v${version}",
+      preReleaseIdentifier: "canary",
     },
     publishConfig: {
       access: "public",
       registry: "https://registry.npmjs.org/",
     },
+    repoType: "single",
   };
 
   constructor() {}
@@ -207,9 +209,9 @@ class SingleProjectProvider {
 
     return { success, message, data };
   }
-  // #endregion - @init
+  // #endregion
 
-  // #region - @getPackage
+  // #region Get Package
   /**
    * @description Retrieves the package.json data for a single project repository.
    * @returns {FunctionResultPromise<SingleProjectPackageJson | null>} A promise that resolves to a FunctionResult containing the package.json data or an error message.
@@ -253,7 +255,7 @@ class SingleProjectProvider {
 
     return { success, message, data };
   }
-  // #endregion - @getPackage
+  // #endregion
 }
 
 export default SingleProjectProvider;

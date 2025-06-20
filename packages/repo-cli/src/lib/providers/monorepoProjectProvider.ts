@@ -27,6 +27,7 @@ class MonorepoProjectProvider {
       preReleaseIdentifier: "canary", // Default identifier for pre-release versions
     },
     workspaces: ["packages/*"],
+    repoType: "monorepo",
   };
 
   constructor() {}

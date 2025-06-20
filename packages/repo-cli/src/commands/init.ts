@@ -5,9 +5,9 @@ import z from "zod/v4";
 
 import type { MonorepoProjectConfig } from "@/types/providers/monorepoProject";
 import type { SingleProjectConfig } from "@/types/providers/singleProject";
-import RepositoryClient from "@/lib/repositoryClient";
-import { intro, outro } from "@/utils/intro";
-import { onCommandFlowCancel, onCommandFlowError } from "@/utils/events";
+import RepositoryClient from "@lib/repositoryClient";
+import { intro, outro } from "@utils/intro";
+import { onCommandFlowCancel, onCommandFlowError } from "@utils/events";
 
 type InitCommandOptions = {
   monorepo?: boolean;
@@ -152,9 +152,9 @@ function initCommand(program: Command): Command {
                   preReleaseIdentifier,
                 } satisfies MonorepoProjectConfig["release"];
               }
-
               if (results.repoType === "single") {
                 return {
+                  tagFormat: "v${version}",
                   preReleaseIdentifier,
                 } satisfies SingleProjectConfig["release"];
               }

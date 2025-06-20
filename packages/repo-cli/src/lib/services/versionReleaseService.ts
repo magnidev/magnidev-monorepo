@@ -10,34 +10,24 @@ import path from "node:path";
 
 import type { FunctionResultPromise } from "@/types";
 import type { VersionType } from "@/types/repository";
-import RepositoryClient from "@lib/repositoryClient";
-import GitHubClient from "@lib/githubClient";
-import { execAsync } from "@utils/console";
+import RepositoryClient from "@/lib/repositoryClient";
 
 export type VersionBumpOptions = {
   packageName?: string;
   versionType: VersionType;
   prereleaseId?: string;
   customTag?: string;
-  publishToNpm: boolean;
-  createGitHubRelease: boolean;
-  releaseName?: string;
-  releaseDescription?: string;
-  isPrerelease: boolean;
   configPreReleaseIdentifier?: string;
 };
 
 export class VersionReleaseService {
   private repositoryClient: RepositoryClient;
-  private githubClient: GitHubClient;
 
-  constructor(repositoryClient: RepositoryClient, githubClient: GitHubClient) {
+  constructor(repositoryClient: RepositoryClient) {
     this.repositoryClient = repositoryClient;
-    this.githubClient = githubClient;
   }
-
   /**
-   * Performs the complete version bump, release, and publish workflow
+   * Performs the complete version bump and git tagging workflow
    */
   async executeVersionRelease(
     options: VersionBumpOptions
@@ -45,8 +35,6 @@ export class VersionReleaseService {
     oldVersion: string;
     newVersion: string;
     tagName: string;
-    releaseUrl?: string;
-    npmPublished: boolean;
   }> {
     try {
       // Get repository type
@@ -89,31 +77,7 @@ export class VersionReleaseService {
       if (!tagResult.success || !tagResult.data) {
         return { success: false, message: tagResult.message };
       }
-
       const tagName = tagResult.data;
-      let releaseUrl: string | undefined;
-      let npmPublished = false;
-
-      // Create GitHub release if requested
-      if (enhancedOptions.createGitHubRelease) {
-        const releaseResult = await this.createGitHubRelease(
-          enhancedOptions,
-          tagName
-        );
-        if (!releaseResult.success) {
-          return { success: false, message: releaseResult.message };
-        }
-        releaseUrl = releaseResult.data?.html_url;
-      }
-
-      // Publish to npm if requested
-      if (enhancedOptions.publishToNpm) {
-        const npmResult = await this.publishToNpm(
-          repoType.data,
-          enhancedOptions
-        );
-        npmPublished = npmResult.success;
-      }
 
       return {
         success: true,
@@ -122,8 +86,6 @@ export class VersionReleaseService {
           oldVersion,
           newVersion,
           tagName,
-          releaseUrl,
-          npmPublished,
         },
       };
     } catch (error) {
@@ -249,14 +211,20 @@ export class VersionReleaseService {
   ): FunctionResultPromise<string> {
     try {
       const gitClient = this.repositoryClient.gitClient;
-
       let tagFormat: string;
       if (repoType === "single") {
         tagFormat = config.release.tagFormat.replace("${version}", newVersion);
       } else {
-        tagFormat = config.release.tagFormat
-          .replace("${name}", options.packageName!)
-          .replace("${version}", newVersion);
+        // For monorepo: handle both fixed and independent versioning
+        if (config.release.versioningStrategy === "fixed") {
+          // Fixed versioning uses v${version} format
+          tagFormat = `v${newVersion}`;
+        } else {
+          // Independent versioning uses ${name}@${version} format
+          tagFormat = config.release.tagFormat
+            .replace("${name}", options.packageName!)
+            .replace("${version}", newVersion);
+        }
       }
 
       const tagMessage =
@@ -284,111 +252,6 @@ export class VersionReleaseService {
         success: false,
         message:
           error instanceof Error ? error.message : "Failed to create git tag",
-      };
-    }
-  }
-
-  /**
-   * Creates GitHub release
-   */
-  private async createGitHubRelease(
-    options: VersionBumpOptions,
-    tagName: string
-  ): FunctionResultPromise<any> {
-    try {
-      const repoInfo = await this.repositoryClient.getRepoInfo();
-      if (!repoInfo.success || !repoInfo.data) {
-        return { success: false, message: repoInfo.message };
-      }
-
-      const { owner, repo } = repoInfo.data;
-      const releaseName = options.releaseName || tagName;
-      const releaseDescription = options.releaseDescription || "";
-
-      const release = await this.githubClient.createRelease(
-        owner,
-        repo,
-        tagName,
-        releaseName,
-        releaseDescription,
-        options.isPrerelease
-      );
-
-      return {
-        success: true,
-        message: "GitHub release created successfully",
-        data: release,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message:
-          error instanceof Error
-            ? error.message
-            : "Failed to create GitHub release",
-      };
-    }
-  }
-
-  /**
-   * Publishes package to npm
-   */
-  private async publishToNpm(
-    repoType: "single" | "monorepo",
-    options: VersionBumpOptions
-  ): FunctionResultPromise<boolean> {
-    try {
-      const publishCommand =
-        options.versionType === "prerelease"
-          ? "npm publish --tag beta"
-          : "npm publish";
-
-      if (repoType === "single") {
-        const { stdout, stderr } = await execAsync(publishCommand, {
-          cwd: process.cwd(),
-        });
-
-        if (stderr && !stderr.includes("npm notice")) {
-          throw new Error(stderr);
-        }
-      } else {
-        const packagesDir = path.join(process.cwd(), "packages");
-        const packageDirs = await fs.readdir(packagesDir);
-
-        for (const dir of packageDirs) {
-          const packageJsonPath = path.join(packagesDir, dir, "package.json");
-          try {
-            const packageJson = JSON.parse(
-              await fs.readFile(packageJsonPath, "utf-8")
-            );
-
-            if (packageJson.name === options.packageName) {
-              const { stdout, stderr } = await execAsync(publishCommand, {
-                cwd: path.join(packagesDir, dir),
-              });
-
-              if (stderr && !stderr.includes("npm notice")) {
-                throw new Error(stderr);
-              }
-              break;
-            }
-          } catch (error) {
-            continue;
-          }
-        }
-      }
-
-      return {
-        success: true,
-        message: "Package published to npm successfully",
-        data: true,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message:
-          error instanceof Error ? error.message : "Failed to publish to npm",
-        data: false,
       };
     }
   }

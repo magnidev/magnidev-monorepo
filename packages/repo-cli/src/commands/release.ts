@@ -4,7 +4,6 @@ import colors from "picocolors";
 
 import type { VersionType } from "@/types/repository";
 import RepositoryClient from "@lib/repositoryClient";
-import GitHubClient from "@lib/githubClient";
 import { VersionReleaseService } from "@services/versionReleaseService";
 import { intro, outro } from "@utils/intro";
 import { onCommandFlowCancel, onCommandFlowError } from "@utils/events";
@@ -17,7 +16,7 @@ type ReleaseCommandOptions = {
 function releaseCommand(program: Command): Command {
   return program
     .command("release")
-    .description("bump version, create release, and publish")
+    .description("bump version and create git tags (CI/CD handles publishing)")
     .option("-t, --tag <tag>", "specific tag to use")
     .option(
       "--type <type>",
@@ -44,17 +43,9 @@ function releaseCommand(program: Command): Command {
         // #region - Initialize Clients
         const repositoryClient = new RepositoryClient();
         const gitClient = repositoryClient.gitClient;
-        const githubClient = new GitHubClient();
         const versionReleaseService = new VersionReleaseService(
-          repositoryClient,
-          githubClient
+          repositoryClient
         );
-
-        // Initialize GitHub client with token if available
-        const githubToken = process.env.GITHUB_TOKEN;
-        if (githubToken) {
-          githubClient.init(githubToken);
-        }
 
         // Check if the current directory is a Git repository
         const isGitRepo = await gitClient.checkIsRepo();
@@ -107,7 +98,7 @@ function releaseCommand(program: Command): Command {
                 }));
 
                 return await prompts.select({
-                  message: "Select the package to version:",
+                  message: "Select the package to release:",
                   options,
                   maxItems: 1,
                 });
@@ -151,74 +142,9 @@ function releaseCommand(program: Command): Command {
               });
             },
             // #endregion - @versionType
-
-            // #region - @createGitHubRelease
-            createGitHubRelease: async () => {
-              if (!githubToken) {
-                prompts.note(
-                  "GitHub token not found. Skipping GitHub release option.",
-                  "GitHub Release"
-                );
-                return false;
-              }
-
-              return await prompts.confirm({
-                message: "Do you want to create a GitHub release?",
-                initialValue: false,
-              });
-            },
-            // #endregion - @createGitHubRelease
-
-            // #region - @releaseName
-            releaseName: async ({ results }) => {
-              if (!results.createGitHubRelease) return undefined;
-
-              return await prompts.text({
-                message: "Enter the release name:",
-                initialValue: "",
-                validate: (value) => {
-                  if (!value.trim()) {
-                    return "Release name is required";
-                  }
-                  return undefined;
-                },
-              });
-            },
-            // #endregion - @releaseName
-
-            // #region - @releaseDescription
-            releaseDescription: async ({ results }) => {
-              if (!results.createGitHubRelease) return undefined;
-
-              return await prompts.text({
-                message: "Enter the release description (optional):",
-                initialValue: "",
-              });
-            },
-            // #endregion - @releaseDescription
-
-            // #region - @isPrerelease
-            isPrerelease: async ({ results }) => {
-              if (!results.createGitHubRelease) return false;
-
-              return await prompts.confirm({
-                message: "Is this a prerelease?",
-                initialValue: results.versionType === "prerelease",
-              });
-            },
-            // #endregion - @isPrerelease
-
-            // #region - @publishToNpm
-            publishToNpm: async () => {
-              return await prompts.confirm({
-                message: "Do you want to publish to npm?",
-                initialValue: false,
-              });
-            },
-            // #endregion - @publishToNpm
           },
           {
-            onCancel: () => onCommandFlowCancel("Version command cancelled."),
+            onCancel: () => onCommandFlowCancel("Release command cancelled."),
           }
         );
         // #endregion - Command Flow
@@ -229,21 +155,12 @@ function releaseCommand(program: Command): Command {
           versionType: userConfig.versionType as VersionType,
           prereleaseId: configResult.data?.release.preReleaseIdentifier,
           customTag: tag,
-          publishToNpm: userConfig.publishToNpm as boolean,
-          createGitHubRelease: userConfig.createGitHubRelease as boolean,
-          releaseName: userConfig.releaseName as string | undefined,
-          releaseDescription: userConfig.releaseDescription as
-            | string
-            | undefined,
-          isPrerelease: userConfig.isPrerelease as boolean,
         });
-
         if (!result.success || !result.data) {
           onCommandFlowCancel(result.message);
         }
 
-        const { oldVersion, newVersion, tagName, releaseUrl, npmPublished } =
-          result.data!;
+        const { oldVersion, newVersion, tagName } = result.data!;
 
         // Display results
         prompts.note(
@@ -253,28 +170,12 @@ function releaseCommand(program: Command): Command {
             : `Version bumped for ${userConfig.packageName}`
         );
 
-        prompts.note(`Tag created: ${tagName}`, "Git Tag");
+        prompts.note(`Tag created and pushed: ${tagName}`, "Git Tag");
 
-        if (userConfig.createGitHubRelease && releaseUrl) {
-          prompts.note(`Release URL: ${releaseUrl}`, "GitHub Release Created");
-
-          if (userConfig.isPrerelease) {
-            prompts.note("This release is marked as prerelease", "Prerelease");
-          }
-        }
-
-        if (userConfig.publishToNpm) {
-          if (npmPublished) {
-            prompts.note(
-              repoType.data === "single"
-                ? "Package published successfully to npm"
-                : `Package ${userConfig.packageName} published successfully to npm`,
-              "NPM Publish Complete"
-            );
-          } else {
-            prompts.note("Failed to publish to npm", "NPM Publish Failed");
-          }
-        }
+        prompts.note(
+          "Your tag has been pushed! The CI/CD pipeline will handle creating the GitHub release and publishing to npm.",
+          "Release Pipeline"
+        );
         // #endregion - Execute Version Release
         prompts.outro(outro);
       } catch (error: any) {

@@ -7,6 +7,16 @@ import { packageJsonSchema } from "@/schemas/packageJsonSchema";
  */
 export const singleProjectConfigSchema = z.object({
   release: z.object({
+    tagFormat: z
+      .string()
+      .regex(/^.*\$\{version\}.*$/, {
+        error: "Tag format must include ${version} placeholder",
+      })
+      .default("v${version}")
+      .meta({
+        description:
+          "Format for release tags, must include ${version} placeholder.",
+      }),
     preReleaseIdentifier: z.string().default("canary").meta({
       description: "Identifier for pre-release versions. Default is 'canary'.",
     }),
@@ -21,6 +31,11 @@ export const singleProjectConfigSchema = z.object({
       .url({ error: "Registry must be a valid URL" })
       .default("https://registry.npmjs.org/"),
   }),
+  repoType: z
+    .enum(["monorepo", "single"], {
+      error: "Repository type must be either 'monorepo' or 'single'",
+    })
+    .default("single"),
 });
 
 /**

@@ -13,10 +13,10 @@ export const monorepoProjectConfigSchema = z.object({
       .regex(/^.*\$\{version\}.*$/, {
         error: "Tag format must include ${version} placeholder.",
       })
-      .default("v${version}")
+      .default("${name}@${version}")
       .meta({
         description:
-          "Format for release tags, must include `${version}` placeholder. Optionally, you can use `${name}` as well.",
+          "Format for release tags, must include `${version}` placeholder. For monorepos, you can use `${name}` as well. For fixed versioning, use 'v${version}'.",
       }),
     versioningStrategy: z
       .enum(["fixed", "independent"], {
@@ -42,6 +42,11 @@ export const monorepoProjectConfigSchema = z.object({
       description:
         "List of workspace paths for monorepo projects. Required for monorepos.",
     }),
+  repoType: z
+    .enum(["monorepo", "single"], {
+      error: "Repository type must be either 'monorepo' or 'single'",
+    })
+    .default("monorepo"),
 });
 
 /**

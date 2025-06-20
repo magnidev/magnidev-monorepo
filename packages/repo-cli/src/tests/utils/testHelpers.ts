@@ -68,8 +68,10 @@ export function createValidSingleProjectConfig(): SingleProjectConfig {
       access: "public",
     },
     release: {
+      tagFormat: "v${version}",
       preReleaseIdentifier: "canary", // Default identifier for pre-release versions
     },
+    repoType: "single",
   };
 }
 
@@ -80,10 +82,11 @@ export function createValidMonorepoConfig(): MonorepoProjectConfig {
   return {
     release: {
       versioningStrategy: "independent",
-      tagFormat: "${name}@{version}",
-      preReleaseIdentifier: "canary", // Default identifier for pre-release versions
+      tagFormat: "${name}@${version}",
+      preReleaseIdentifier: "canary",
     },
     workspaces: ["packages/*"],
+    repoType: "monorepo",
   };
 }
 
