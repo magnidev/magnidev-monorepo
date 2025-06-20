@@ -135,7 +135,8 @@ on:
   push:
     tags:
       - 'v*'           # Fixed versioning: v1.0.0
-      - '@*@*'         # Independent versioning: @org/package@1.0.0
+      - '*'            # All tags - we'll filter in the job
+  workflow_dispatch:   # Allow manual triggering for testing
 
 env:
   NODE_VERSION: '18'
@@ -143,42 +144,51 @@ env:
 jobs:
   detect-release-type:
     name: Detect Release Type
-    runs-on: ubuntu-latest
-    outputs:
+    runs-on: ubuntu-latest    outputs:
+      is_valid: \${{ steps.detect.outputs.is_valid }}
       is_fixed: \${{ steps.detect.outputs.is_fixed }}
       package_name: \${{ steps.detect.outputs.package_name }}
       version: \${{ steps.detect.outputs.version }}
       tag: \${{ steps.detect.outputs.tag }}
       is_prerelease: \${{ steps.detect.outputs.is_prerelease }}
       
-    steps:
-      - name: Detect release type and extract info
+    steps:      - name: Detect release type and extract info
         id: detect
         run: |
           TAG=\${GITHUB_REF#refs/tags/}
           echo "tag=\$TAG" >> \$GITHUB_OUTPUT
           
+          # Check if this is a valid release tag
           if [[ \$TAG =~ ^v[0-9] ]]; then
             # Fixed versioning: v1.0.0
+            echo "is_valid=true" >> \$GITHUB_OUTPUT
             echo "is_fixed=true" >> \$GITHUB_OUTPUT
             VERSION=\${TAG#v}
             echo "version=\$VERSION" >> \$GITHUB_OUTPUT
             echo "package_name=" >> \$GITHUB_OUTPUT
-          else
+          elif [[ \$TAG =~ ^@.+@[0-9] ]]; then
             # Independent versioning: @org/package@1.0.0
+            echo "is_valid=true" >> \$GITHUB_OUTPUT
             echo "is_fixed=false" >> \$GITHUB_OUTPUT
             PACKAGE_NAME=\${TAG%@*}
             VERSION=\${TAG##*@}
             echo "package_name=\$PACKAGE_NAME" >> \$GITHUB_OUTPUT
             echo "version=\$VERSION" >> \$GITHUB_OUTPUT
+          else
+            # Not a release tag, skip
+            echo "is_valid=false" >> \$GITHUB_OUTPUT
+            echo "Skipping tag \$TAG - not a release tag pattern"
+            echo "skip_reason=Not a release tag format" >> \$GITHUB_OUTPUT
           fi
           
-          # Check if prerelease
-          echo "is_prerelease=\$([[ \$VERSION == *"canary"* ]] && echo "true" || echo "false")" >> \$GITHUB_OUTPUT
+          # Check if prerelease (only if valid)
+          if [[ "\${is_valid:-false}" == "true" ]]; then
+            echo "is_prerelease=\$([[ \$VERSION == *"canary"* ]] && echo "true" || echo "false")" >> \$GITHUB_OUTPUT
+          fi
 
   release-fixed:
     name: Release All Packages (Fixed Versioning)
-    if: needs.detect-release-type.outputs.is_fixed == 'true'
+    if: needs.detect-release-type.outputs.is_valid == 'true' && needs.detect-release-type.outputs.is_fixed == 'true'
     needs: detect-release-type
     runs-on: ubuntu-latest
     permissions:
@@ -252,7 +262,7 @@ jobs:
 
   release-independent:
     name: Release Single Package (Independent Versioning)
-    if: needs.detect-release-type.outputs.is_fixed == 'false'
+    if: needs.detect-release-type.outputs.is_valid == 'true' && needs.detect-release-type.outputs.is_fixed == 'false'
     needs: detect-release-type
     runs-on: ubuntu-latest
     permissions:

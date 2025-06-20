@@ -76,7 +76,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          registry-url: 'https://registry.npmjs.org'
+          registry-url: "https://registry.npmjs.org"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v2
@@ -96,14 +96,14 @@ jobs:
         id: release_notes
         run: |
           PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
-          
+
           if [ -z "$PREVIOUS_TAG" ]; then
             RELEASE_NOTES="Initial release ${{ needs.detect-release-type.outputs.tag }}"
           else
             RELEASE_NOTES="## Changes since $PREVIOUS_TAG\\n\\n"
             RELEASE_NOTES="$RELEASE_NOTES$(git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD)"
           fi
-          
+
           echo "notes<<EOF" >> $GITHUB_OUTPUT
           echo -e "$RELEASE_NOTES" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
@@ -122,7 +122,7 @@ jobs:
         run: |
           # Update all package versions and publish
           pnpm -r exec -- npm version ${{ needs.detect-release-type.outputs.version }} --no-git-tag-version
-          
+
           if [[ "${{ needs.detect-release-type.outputs.is_prerelease }}" == "true" ]]; then
             pnpm -r publish --tag canary --access public --no-git-checks
           else
@@ -150,7 +150,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          registry-url: 'https://registry.npmjs.org'
+          registry-url: "https://registry.npmjs.org"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v2
@@ -164,15 +164,15 @@ jobs:
         id: find_package
         run: |
           PACKAGE_NAME="${{ needs.detect-release-type.outputs.package_name }}"
-          
+
           # Find the package directory
           PACKAGE_DIR=$(find packages -name "package.json" -exec grep -l "\"name\":\\s*\"$PACKAGE_NAME\"" {} \; | head -1 | xargs dirname)
-          
+
           if [ -z "$PACKAGE_DIR" ]; then
             echo "Package $PACKAGE_NAME not found!"
             exit 1
           fi
-          
+
           echo "package_dir=$PACKAGE_DIR" >> $GITHUB_OUTPUT
 
       - name: Run tests for package
@@ -190,7 +190,7 @@ jobs:
         run: |
           PACKAGE_NAME="${{ needs.detect-release-type.outputs.package_name }}"
           PREVIOUS_TAG=$(git tag -l "$PACKAGE_NAME@*" --sort=-version:refname | head -2 | tail -1)
-          
+
           if [ -z "$PREVIOUS_TAG" ]; then
             RELEASE_NOTES="Initial release for $PACKAGE_NAME@${{ needs.detect-release-type.outputs.version }}"
           else
@@ -198,7 +198,7 @@ jobs:
             # Get commits that affected this package
             RELEASE_NOTES="$RELEASE_NOTES$(git log --pretty=format:"- %s (%h)" --oneline $PREVIOUS_TAG..HEAD -- ${{ steps.find_package.outputs.package_dir }})"
           fi
-          
+
           echo "notes<<EOF" >> $GITHUB_OUTPUT
           echo -e "$RELEASE_NOTES" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
@@ -216,7 +216,7 @@ jobs:
       - name: Publish package
         run: |
           cd ${{ steps.find_package.outputs.package_dir }}
-          
+
           if [[ "${{ needs.detect-release-type.outputs.is_prerelease }}" == "true" ]]; then
             pnpm publish --tag canary --access public --no-git-checks
           else
