@@ -1,6 +1,6 @@
 {
   "name": "@magnidev/repo-cli",
-  "version": "2.0.0-canary.1",
+  "version": "2.0.0-canary.2",
   "type": "commonjs",
   "license": "ISC",
   "description": "CLI to manage packages in Repositories or Monorepos of GitHub.",
