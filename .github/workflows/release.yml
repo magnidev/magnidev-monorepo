@@ -4,7 +4,8 @@ on:
   push:
     tags:
       - "v*" # Fixed versioning: v1.0.0
-      - "@*@*" # Independent versioning: @org/package@1.0.0
+      - "*" # All tags - we'll filter in the job
+  workflow_dispatch: # Allow manual triggering for testing
 
 env:
   NODE_VERSION: "18"
@@ -14,6 +15,7 @@ jobs:
     name: Detect Release Type
     runs-on: ubuntu-latest
     outputs:
+      is_valid: ${{ steps.detect.outputs.is_valid }}
       is_fixed: ${{ steps.detect.outputs.is_fixed }}
       package_name: ${{ steps.detect.outputs.package_name }}
       version: ${{ steps.detect.outputs.version }}
@@ -27,27 +29,37 @@ jobs:
           TAG=${GITHUB_REF#refs/tags/}
           echo "tag=$TAG" >> $GITHUB_OUTPUT
 
+          # Check if this is a valid release tag
           if [[ $TAG =~ ^v[0-9] ]]; then
             # Fixed versioning: v1.0.0
+            echo "is_valid=true" >> $GITHUB_OUTPUT
             echo "is_fixed=true" >> $GITHUB_OUTPUT
             VERSION=${TAG#v}
             echo "version=$VERSION" >> $GITHUB_OUTPUT
             echo "package_name=" >> $GITHUB_OUTPUT
-          else
+          elif [[ $TAG =~ ^@.+@[0-9] ]]; then
             # Independent versioning: @org/package@1.0.0
+            echo "is_valid=true" >> $GITHUB_OUTPUT
             echo "is_fixed=false" >> $GITHUB_OUTPUT
             PACKAGE_NAME=${TAG%@*}
             VERSION=${TAG##*@}
             echo "package_name=$PACKAGE_NAME" >> $GITHUB_OUTPUT
             echo "version=$VERSION" >> $GITHUB_OUTPUT
+          else
+            # Not a release tag, skip
+            echo "is_valid=false" >> $GITHUB_OUTPUT
+            echo "Skipping tag $TAG - not a release tag pattern"
+            echo "skip_reason=Not a release tag format" >> $GITHUB_OUTPUT
           fi
 
-          # Check if prerelease
-          echo "is_prerelease=$([[ $VERSION == *"canary"* ]] && echo "true" || echo "false")" >> $GITHUB_OUTPUT
+          # Check if prerelease (only if valid)
+          if [[ "${is_valid:-false}" == "true" ]]; then
+            echo "is_prerelease=$([[ $VERSION == *"canary"* ]] && echo "true" || echo "false")" >> $GITHUB_OUTPUT
+          fi
 
   release-fixed:
     name: Release All Packages (Fixed Versioning)
-    if: needs.detect-release-type.outputs.is_fixed == 'true'
+    if: needs.detect-release-type.outputs.is_valid == 'true' && needs.detect-release-type.outputs.is_fixed == 'true'
     needs: detect-release-type
     runs-on: ubuntu-latest
     permissions:
@@ -64,7 +76,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          registry-url: "https://registry.npmjs.org"
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Install pnpm
         uses: pnpm/action-setup@v2
@@ -84,14 +96,14 @@ jobs:
         id: release_notes
         run: |
           PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
-
+          
           if [ -z "$PREVIOUS_TAG" ]; then
             RELEASE_NOTES="Initial release ${{ needs.detect-release-type.outputs.tag }}"
           else
-            RELEASE_NOTES="## Changes since $PREVIOUS_TAG\n\n"
+            RELEASE_NOTES="## Changes since $PREVIOUS_TAG\\n\\n"
             RELEASE_NOTES="$RELEASE_NOTES$(git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD)"
           fi
-
+          
           echo "notes<<EOF" >> $GITHUB_OUTPUT
           echo -e "$RELEASE_NOTES" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
@@ -110,7 +122,7 @@ jobs:
         run: |
           # Update all package versions and publish
           pnpm -r exec -- npm version ${{ needs.detect-release-type.outputs.version }} --no-git-tag-version
-
+          
           if [[ "${{ needs.detect-release-type.outputs.is_prerelease }}" == "true" ]]; then
             pnpm -r publish --tag canary --access public --no-git-checks
           else
@@ -121,7 +133,7 @@ jobs:
 
   release-independent:
     name: Release Single Package (Independent Versioning)
-    if: needs.detect-release-type.outputs.is_fixed == 'false'
+    if: needs.detect-release-type.outputs.is_valid == 'true' && needs.detect-release-type.outputs.is_fixed == 'false'
     needs: detect-release-type
     runs-on: ubuntu-latest
     permissions:
@@ -138,7 +150,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          registry-url: "https://registry.npmjs.org"
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Install pnpm
         uses: pnpm/action-setup@v2
@@ -152,15 +164,15 @@ jobs:
         id: find_package
         run: |
           PACKAGE_NAME="${{ needs.detect-release-type.outputs.package_name }}"
-
+          
           # Find the package directory
-          PACKAGE_DIR=$(find packages -name "package.json" -exec grep -l "\"name\":\s*\"$PACKAGE_NAME\"" {} \; | head -1 | xargs dirname)
-
+          PACKAGE_DIR=$(find packages -name "package.json" -exec grep -l "\"name\":\\s*\"$PACKAGE_NAME\"" {} \; | head -1 | xargs dirname)
+          
           if [ -z "$PACKAGE_DIR" ]; then
             echo "Package $PACKAGE_NAME not found!"
             exit 1
           fi
-
+          
           echo "package_dir=$PACKAGE_DIR" >> $GITHUB_OUTPUT
 
       - name: Run tests for package
@@ -178,15 +190,15 @@ jobs:
         run: |
           PACKAGE_NAME="${{ needs.detect-release-type.outputs.package_name }}"
           PREVIOUS_TAG=$(git tag -l "$PACKAGE_NAME@*" --sort=-version:refname | head -2 | tail -1)
-
+          
           if [ -z "$PREVIOUS_TAG" ]; then
             RELEASE_NOTES="Initial release for $PACKAGE_NAME@${{ needs.detect-release-type.outputs.version }}"
           else
-            RELEASE_NOTES="## Changes in $PACKAGE_NAME since $PREVIOUS_TAG\n\n"
+            RELEASE_NOTES="## Changes in $PACKAGE_NAME since $PREVIOUS_TAG\\n\\n"
             # Get commits that affected this package
             RELEASE_NOTES="$RELEASE_NOTES$(git log --pretty=format:"- %s (%h)" --oneline $PREVIOUS_TAG..HEAD -- ${{ steps.find_package.outputs.package_dir }})"
           fi
-
+          
           echo "notes<<EOF" >> $GITHUB_OUTPUT
           echo -e "$RELEASE_NOTES" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
@@ -204,7 +216,7 @@ jobs:
       - name: Publish package
         run: |
           cd ${{ steps.find_package.outputs.package_dir }}
-
+          
           if [[ "${{ needs.detect-release-type.outputs.is_prerelease }}" == "true" ]]; then
             pnpm publish --tag canary --access public --no-git-checks
           else
