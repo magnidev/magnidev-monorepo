@@ -100,7 +100,7 @@ function infoCommand(program: Command): Command {
 
         prompts.outro("🚀 Repo CLI by @magnidev, happy coding!");
       } catch (error: any) {
-        onCommandFlowError(error as Error);
+        onCommandFlowError(error);
       }
     });
 }
