@@ -8,6 +8,9 @@
     "emitDeclarationOnly": false /* Only output d.ts files and not JavaScript files. */,
     /* Emit */
     "declaration": true /* Generate .d.ts files from TypeScript and JavaScript files in your project. */,
+    "noImplicitAny": true /* Enable error reporting for expressions and declarations with an implied 'any' type. */,
+    "strictNullChecks": true /* When type checking, take into account 'null' and 'undefined'. */,
+    "strictFunctionTypes": true /* When assigning functions, check to ensure parameters and the return values are subtype-compatible. */,
     "composite": true /* Enable project references. */,
     "outDir": "./dist" /* Specify an output folder for all emitted files. */
   }
