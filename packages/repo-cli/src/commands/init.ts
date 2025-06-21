@@ -83,14 +83,12 @@ function initCommand(program: Command): Command {
             release: async ({ results }) => {
               // If --monorepo or --single is used, return the default release config
               if (useMonorepo) {
-                const { release } =
-                  repositoryClient.monorepoProvider.defaultConfig;
+                const { release } = repositoryClient.monorepoProvider.config;
 
                 return release;
               }
               if (useSingle) {
-                const { release } =
-                  repositoryClient.singleProvider.defaultConfig;
+                const { release } = repositoryClient.singleProvider.config;
 
                 return release;
               }
@@ -173,8 +171,7 @@ function initCommand(program: Command): Command {
             workspaces: async ({ results }) => {
               // If --monorepo or --single is used, return the default workspaces config
               if (useMonorepo) {
-                const { workspaces } =
-                  repositoryClient.monorepoProvider.defaultConfig;
+                const { workspaces } = repositoryClient.monorepoProvider.config;
 
                 return workspaces;
               }
@@ -219,7 +216,7 @@ function initCommand(program: Command): Command {
 
               if (useSingle) {
                 const { publishConfig } =
-                  repositoryClient.singleProvider.defaultConfig;
+                  repositoryClient.singleProvider.config;
 
                 return publishConfig;
               }
@@ -362,7 +359,7 @@ function initCommand(program: Command): Command {
 
         // #endregion Business Logic
       } catch (error: any) {
-        onCommandFlowError(error as Error);
+        onCommandFlowError(error);
       }
     });
 }
