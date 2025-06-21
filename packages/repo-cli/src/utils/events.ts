@@ -16,6 +16,7 @@ export function onCommandFlowCancel(message?: string): void {
  * This function handles errors in the command flow by calling `onCommandFlowCancel`
  * with the error message and then exits the process with an error code.
  */
-export function onCommandFlowError(error: Error): void {
-  onCommandFlowCancel(error.message);
+export function onCommandFlowError(error: any): void {
+  const message = error instanceof Error ? error.message : String(error);
+  onCommandFlowCancel(message);
 }
