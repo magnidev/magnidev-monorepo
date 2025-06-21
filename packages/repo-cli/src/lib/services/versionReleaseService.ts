@@ -10,7 +10,7 @@ import path from "node:path";
 
 import type { FunctionResultPromise } from "@/types";
 import type { VersionType } from "@/types/repository";
-import RepositoryClient from "@/lib/repositoryClient";
+import RepositoryClient from "@lib/repositoryClient";
 
 export type VersionBumpOptions = {
   packageName?: string;
@@ -45,7 +45,7 @@ export class VersionReleaseService {
       const configResult =
         repoType.data === "monorepo"
           ? await this.repositoryClient.monorepoProjectProvider.getConfig()
-          : await this.repositoryClient.singleProjectProvider.getConfig();
+          : await this.repositoryClient.singleProvider.getConfig();
 
       if (!configResult.success || !configResult.data) {
         return { success: false, message: configResult.message };
@@ -110,7 +110,7 @@ export class VersionReleaseService {
 
       if (repoType === "single") {
         const packageResult =
-          await this.repositoryClient.singleProjectProvider.getPackage();
+          await this.repositoryClient.singleProvider.getPackage();
         if (!packageResult.success || !packageResult.data) {
           return { success: false, message: packageResult.message };
         }

@@ -1,6 +1,6 @@
 import { z } from "zod/v4";
 
-import { packageJsonSchema } from "@/schemas/packageJsonSchema";
+import { packageJsonSchema } from "@schemas/packageJsonSchema";
 
 /**
  * Schema for validating a monorepo configuration.

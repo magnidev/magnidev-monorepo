@@ -1,24 +1,21 @@
 /**
- * @name SingleProjectProvider
- * @file src/lib/providers/singleProjectProvider.ts
+ * @name singleProvider
+ * @file src/lib/providers/singleProvider.ts
  * @description Class to manage single project information and configuration
  */
 
 import path from "node:path";
 
 import type { FunctionResultPromise } from "@/types";
-import type {
-  SingleProjectConfig,
-  SingleProjectPackageJson,
-} from "@/types/providers/singleProject";
+import type { singleConfig, singlePackageJson } from "@/types/providers/single";
 import {
-  singleProjectConfigSchema,
-  singleProjectPackageJsonSchema,
-} from "@/schemas/providers/singleProjectSchemas";
-import { dirExists, readJsonFile, writeJsonFile } from "@/utils/files";
+  singleConfigSchema,
+  singlePackageJsonSchema,
+} from "@schemas/providers/singleSchemas";
+import { dirExists, readJsonFile, writeJsonFile } from "@utils/files";
 
-class SingleProjectProvider {
-  defaultConfig: SingleProjectConfig = {
+class singleProvider {
+  defaultConfig: singleConfig = {
     release: {
       tagFormat: "v${version}",
       preReleaseIdentifier: "canary",
@@ -39,19 +36,18 @@ class SingleProjectProvider {
    * @returns {FunctionResultPromise} A promise that resolves to a FunctionResult containing the parsed configuration or an error message.
    */
   private async parseConfig(
-    config: SingleProjectConfig | null
-  ): FunctionResultPromise<SingleProjectConfig | null> {
+    config: singleConfig | null
+  ): FunctionResultPromise<singleConfig | null> {
     let success: boolean = false;
     let message: string = "";
-    let data: SingleProjectConfig | null = null;
+    let data: singleConfig | null = null;
 
     try {
       if (!config) {
         throw new Error("No configuration provided.");
       }
 
-      const parsedConfig =
-        await singleProjectConfigSchema.safeParseAsync(config);
+      const parsedConfig = await singleConfigSchema.safeParseAsync(config);
 
       if (!parsedConfig.success) {
         throw new Error(
@@ -79,14 +75,14 @@ class SingleProjectProvider {
   /**
    * @description Parses and validates the provided package.json object for a single project.
    * @param packageJson The package.json object to parse.
-   * @returns {FunctionResultPromise<SingleProjectPackageJson | null>} A promise that resolves to a FunctionResult containing the parsed package.json or an error message.
+   * @returns {FunctionResultPromise<singlePackageJson | null>} A promise that resolves to a FunctionResult containing the parsed package.json or an error message.
    */
   public async parsePackageJson(
-    packageJson: SingleProjectPackageJson | null
-  ): FunctionResultPromise<SingleProjectPackageJson | null> {
+    packageJson: singlePackageJson | null
+  ): FunctionResultPromise<singlePackageJson | null> {
     let success: boolean = false;
     let message: string = "";
-    let data: SingleProjectPackageJson | null = null;
+    let data: singlePackageJson | null = null;
 
     try {
       if (!packageJson) {
@@ -94,7 +90,7 @@ class SingleProjectProvider {
       }
 
       const parsedPackageJson =
-        await singleProjectPackageJsonSchema.safeParseAsync(packageJson);
+        await singlePackageJsonSchema.safeParseAsync(packageJson);
 
       if (!parsedPackageJson.success) {
         throw new Error(
@@ -117,12 +113,12 @@ class SingleProjectProvider {
   // #region - @getConfig
   /**
    * @description Loads the configuration for a single project repository.
-   * @returns {FunctionResultPromise<SingleProjectConfig | null>} A promise that resolves to a FunctionResult containing the configuration or an error message.
+   * @returns {FunctionResultPromise<singleConfig | null>} A promise that resolves to a FunctionResult containing the configuration or an error message.
    */
-  public async getConfig(): FunctionResultPromise<SingleProjectConfig | null> {
+  public async getConfig(): FunctionResultPromise<singleConfig | null> {
     let success: boolean = false;
     let message: string = "";
-    let data: SingleProjectConfig | null = null;
+    let data: singleConfig | null = null;
 
     try {
       // Load the root package.json file
@@ -159,14 +155,14 @@ class SingleProjectProvider {
   /**
    * @description Initializes the repository configuration for a single project or monorepo.
    * @param userConfig The user-defined configuration for the repository.
-   * @returns {FunctionResultPromise<SingleProjectConfig | null>} A promise that resolves to a FunctionResult containing the initialized configuration or an error message.
+   * @returns {FunctionResultPromise<singleConfig | null>} A promise that resolves to a FunctionResult containing the initialized configuration or an error message.
    */
   public async init(
-    userConfig: SingleProjectConfig
-  ): FunctionResultPromise<SingleProjectConfig | null> {
+    userConfig: singleConfig
+  ): FunctionResultPromise<singleConfig | null> {
     let success: boolean = false;
     let message: string = "";
-    let data: SingleProjectConfig | null = null;
+    let data: singleConfig | null = null;
 
     try {
       // Find if a configuration already exists
@@ -214,12 +210,12 @@ class SingleProjectProvider {
   // #region Get Package
   /**
    * @description Retrieves the package.json data for a single project repository.
-   * @returns {FunctionResultPromise<SingleProjectPackageJson | null>} A promise that resolves to a FunctionResult containing the package.json data or an error message.
+   * @returns {FunctionResultPromise<singlePackageJson | null>} A promise that resolves to a FunctionResult containing the package.json data or an error message.
    */
-  public async getPackage(): FunctionResultPromise<SingleProjectPackageJson | null> {
+  public async getPackage(): FunctionResultPromise<singlePackageJson | null> {
     let success: boolean = false;
     let message: string = "";
-    let data: SingleProjectPackageJson | null = null;
+    let data: singlePackageJson | null = null;
 
     try {
       // Load the root package.json file
@@ -258,4 +254,4 @@ class SingleProjectProvider {
   // #endregion
 }
 
-export default SingleProjectProvider;
+export default singleProvider;

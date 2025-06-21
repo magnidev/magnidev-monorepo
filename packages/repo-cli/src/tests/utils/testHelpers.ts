@@ -3,8 +3,8 @@ import path from "node:path";
 import { tmpdir } from "node:os";
 import { vi } from "vitest";
 
-import type { MonorepoProjectConfig } from "@/types/providers/monorepoProject";
-import type { SingleProjectConfig } from "@/types/providers/singleProject";
+import type { MonorepoProjectConfig } from "@/types/providers/monorepo";
+import type { singleConfig } from "@/types/providers/single";
 
 /**
  * Creates a temporary directory for testing
@@ -61,7 +61,7 @@ export function readPackageJson(dir: string): any {
 /**
  * Creates a valid single project configuration
  */
-export function createValidSingleProjectConfig(): SingleProjectConfig {
+export function createValidsingleConfig(): singleConfig {
   return {
     publishConfig: {
       registry: "https://registry.npmjs.org/",
@@ -93,7 +93,7 @@ export function createValidMonorepoConfig(): MonorepoProjectConfig {
 /**
  * Creates an invalid single project configuration (invalid tag format)
  */
-export function createInvalidSingleProjectConfig(): any {
+export function createInvalidsingleConfig(): any {
   return {
     release: {
       tagFormat: "invalid-tag-format", // Missing ${version} placeholder

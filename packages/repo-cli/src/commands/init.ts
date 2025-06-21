@@ -3,13 +3,13 @@ import prompts from "@clack/prompts";
 import colors from "picocolors";
 import z from "zod/v4";
 
-import type { MonorepoProjectConfig } from "@/types/providers/monorepoProject";
-import type { SingleProjectConfig } from "@/types/providers/singleProject";
+import type { MonorepoProjectConfig } from "@/types/providers/monorepo";
+import type { singleConfig } from "@/types/providers/single";
 import RepositoryClient from "@lib/repositoryClient";
 import { intro, outro } from "@utils/intro";
 import { onCommandFlowCancel, onCommandFlowError } from "@utils/events";
 import {
-  generateSingleProjectWorkflow,
+  generateSingleWorkflow,
   generateMonorepoWorkflow,
   generateWorkflowSetupInstructions,
 } from "@utils/workflowGenerator";
@@ -90,7 +90,7 @@ function initCommand(program: Command): Command {
               }
               if (useSingle) {
                 const { release } =
-                  repositoryClient.singleProjectProvider.defaultConfig;
+                  repositoryClient.singleProvider.defaultConfig;
 
                 return release;
               }
@@ -161,7 +161,7 @@ function initCommand(program: Command): Command {
                 return {
                   tagFormat: "v${version}",
                   preReleaseIdentifier,
-                } satisfies SingleProjectConfig["release"];
+                } satisfies singleConfig["release"];
               }
 
               // If we reach here, it means an invalid type was selected
@@ -219,7 +219,7 @@ function initCommand(program: Command): Command {
 
               if (useSingle) {
                 const { publishConfig } =
-                  repositoryClient.singleProjectProvider.defaultConfig;
+                  repositoryClient.singleProvider.defaultConfig;
 
                 return publishConfig;
               }
@@ -249,7 +249,7 @@ function initCommand(program: Command): Command {
                   ],
                   initialValue: "public",
                   maxItems: 1,
-                })) as SingleProjectConfig["publishConfig"]["access"];
+                })) as singleConfig["publishConfig"]["access"];
 
                 if (prompts.isCancel(access)) onCommandFlowCancel();
 
@@ -258,7 +258,7 @@ function initCommand(program: Command): Command {
                   placeholder: "e.g., https://registry.npmjs.org/",
                   initialValue: "https://registry.npmjs.org/",
                   validate: validateRegistry,
-                })) as SingleProjectConfig["publishConfig"]["registry"];
+                })) as singleConfig["publishConfig"]["registry"];
 
                 if (prompts.isCancel(registry)) onCommandFlowCancel();
               }
@@ -299,10 +299,10 @@ function initCommand(program: Command): Command {
           {
             title: "Initializing Single Project configuration...",
             task: async () => {
-              const client = repositoryClient.singleProjectProvider;
+              const client = repositoryClient.singleProvider;
 
               const { success, message } = await client.init(
-                userConfig as SingleProjectConfig
+                userConfig as singleConfig
               );
               if (!success) onCommandFlowCancel(message);
               return message;
@@ -323,8 +323,7 @@ function initCommand(program: Command): Command {
           {
             title: "Creating GitHub workflow for single project...",
             task: async () => {
-              const { success, message } =
-                await generateSingleProjectWorkflow();
+              const { success, message } = await generateSingleWorkflow();
               if (!success) onCommandFlowCancel(message);
               return message;
             },

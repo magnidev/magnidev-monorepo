@@ -11,11 +11,11 @@ import type { FunctionResultPromise } from "@/types";
 import type {
   MonorepoProjectConfig,
   MonorepoProjectPackageJson,
-} from "@/types/providers/monorepoProject";
+} from "@/types/providers/monorepo";
 import {
   monorepoProjectConfigSchema,
   monorepoProjectPackageJsonSchema,
-} from "@schemas/providers/monorepoProjectSchemas";
+} from "@schemas/providers/monorepoSchemas";
 import { dirExists, readJsonFile, writeJsonFile } from "@utils/files";
 import { ignorePaths } from "@utils/ignorePaths";
 

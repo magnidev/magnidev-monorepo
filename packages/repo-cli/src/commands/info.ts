@@ -3,7 +3,7 @@ import { Command } from "commander";
 import colors from "picocolors";
 
 import type { RepoInfo } from "@/types/repository";
-import type { MonorepoProjectPackageJson } from "@/types/providers/monorepoProject";
+import type { MonorepoProjectPackageJson } from "@/types/providers/monorepo";
 import RepositoryClient from "@lib/repositoryClient";
 import GitClient from "@lib/gitClient";
 import { intro } from "@utils/intro";

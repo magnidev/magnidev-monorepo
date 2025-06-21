@@ -1,11 +1,11 @@
 import { z } from "zod/v4";
 
-import { packageJsonSchema } from "@/schemas/packageJsonSchema";
+import { packageJsonSchema } from "@schemas/packageJsonSchema";
 
 /**
  * Schema for validating a single project configuration.
  */
-export const singleProjectConfigSchema = z.object({
+export const singleConfigSchema = z.object({
   release: z.object({
     tagFormat: z
       .string()
@@ -42,7 +42,7 @@ export const singleProjectConfigSchema = z.object({
  * Schema for validating a single package.json configuration.
  * Combines package.json schema with default configuration schema.
  */
-export const singleProjectPackageJsonSchema = z.object({
+export const singlePackageJsonSchema = z.object({
   ...packageJsonSchema.shape,
-  ...singleProjectConfigSchema.shape,
+  ...singleConfigSchema.shape,
 });

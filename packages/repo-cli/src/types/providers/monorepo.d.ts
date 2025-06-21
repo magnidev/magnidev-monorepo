@@ -5,7 +5,7 @@ import {
   monorepoProjectConfigSchema,
   monorepoProjectRootPackageJsonSchema,
   monorepoProjectPackageJsonSchema,
-} from "@/schemas/providers/monorepoProjectSchemas";
+} from "@schemas/providers/monorepoSchemas";
 
 /**
  * @description The configuration schema for monorepo projects.

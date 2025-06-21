@@ -11,7 +11,7 @@ import type { FunctionResultPromise } from "@/types";
 /**
  * Generates GitHub workflow for single project
  */
-export async function generateSingleProjectWorkflow(): FunctionResultPromise<string> {
+export async function generateSingleWorkflow(): FunctionResultPromise<string> {
   const workflowContent = `name: Release
 
 on:
