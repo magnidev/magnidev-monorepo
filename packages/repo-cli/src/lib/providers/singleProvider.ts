@@ -15,7 +15,7 @@ import {
 import { dirExists, readJsonFile, writeJsonFile } from "@utils/files";
 
 class singleProvider {
-  defaultConfig: singleConfig = {
+  config: singleConfig = {
     release: {
       tagFormat: "v${version}",
       preReleaseIdentifier: "canary",
@@ -135,6 +135,8 @@ class singleProvider {
         throw new Error(rootPackageJsonParsed.message);
       }
 
+      this.config = rootPackageJsonParsed.data; // Update the provider's config with the loaded configuration
+
       success = true;
       message = "Configuration loaded successfully.";
       data = rootPackageJsonParsed.data;
@@ -205,9 +207,9 @@ class singleProvider {
 
     return { success, message, data };
   }
-  // #endregion
+  // #endregion - @init
 
-  // #region Get Package
+  // #region - @getPackage
   /**
    * @description Retrieves the package.json data for a single project repository.
    * @returns {FunctionResultPromise<singlePackageJson | null>} A promise that resolves to a FunctionResult containing the package.json data or an error message.
@@ -251,7 +253,7 @@ class singleProvider {
 
     return { success, message, data };
   }
-  // #endregion
+  // #endregion - @getPackage
 }
 
 export default singleProvider;

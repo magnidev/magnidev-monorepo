@@ -5,22 +5,26 @@
  */
 
 import path from "node:path";
-import semver from "semver";
 
 import type { FunctionResultPromise } from "@/types";
 import type { RepoInfo } from "@/types/repository";
 import monorepoProvider from "@lib/providers/monorepoProvider";
-import singleProvider from "@/lib/providers/singleProvider";
+import singleProvider from "@lib/providers/singleProvider";
 import GitClient from "@lib/gitClient";
+import GitHubClient from "@lib/githubClient";
 import { dirExists, readJsonFile } from "@utils/files";
 
 class Repository {
   public gitClient: GitClient;
+  public githubClient: GitHubClient;
+
   public monorepoProvider: monorepoProvider;
   public singleProvider: singleProvider;
 
   constructor() {
     this.gitClient = new GitClient();
+    this.githubClient = new GitHubClient();
+
     this.monorepoProvider = new monorepoProvider();
     this.singleProvider = new singleProvider();
   }
@@ -156,48 +160,6 @@ class Repository {
     };
   }
   // #endregion - @getRepoInfo
-
-  // #region - @suggestNextVersions
-  /**
-   * @description Suggests the next versions for a given version.
-   * @param currentVersion The current version.
-   * @returns An array of suggested next versions.
-   */
-  public suggestNextVersions(
-    currentVersion: string,
-    versionIdentifier?: string
-  ): string[] {
-    const versions: string[] = [];
-
-    try {
-      const patch = semver.inc(currentVersion, "patch");
-      const minor = semver.inc(currentVersion, "minor");
-      const major = semver.inc(currentVersion, "major");
-      const prerelease = semver.inc(
-        currentVersion,
-        "prerelease",
-        versionIdentifier || "beta"
-      );
-      if (patch) {
-        versions.push(patch);
-      }
-      if (minor) {
-        versions.push(minor);
-      }
-      if (major) {
-        versions.push(major);
-      }
-      if (prerelease) {
-        versions.push(prerelease);
-      }
-    } catch (error) {
-      // Fallback if semver parsing fails
-      versions.push("1.0.0");
-    }
-
-    return versions;
-  }
-  // #endregion - @suggestNextVersions
 }
 
 export default Repository;

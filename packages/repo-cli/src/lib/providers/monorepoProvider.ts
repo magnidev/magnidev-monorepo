@@ -20,7 +20,7 @@ import { dirExists, readJsonFile, writeJsonFile } from "@utils/files";
 import { ignorePaths } from "@utils/ignorePaths";
 
 class MonorepoProvider {
-  public defaultConfig: monorepoConfig = {
+  public config: monorepoConfig = {
     release: {
       tagFormat: "${name}@${version}",
       versioningStrategy: "independent",
@@ -137,6 +137,8 @@ class MonorepoProvider {
       if (!rootPackageJsonParsed.success || !rootPackageJsonParsed.data) {
         throw new Error(rootPackageJsonParsed.message);
       }
+
+      this.config = rootPackageJsonParsed.data; // Update the provider's config with the loaded configuration
 
       success = true;
       message = "Configuration loaded successfully.";
