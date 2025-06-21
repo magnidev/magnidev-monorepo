@@ -75,8 +75,8 @@ function tagCommand(program: Command): Command {
 
         const userConfig = await prompts.group(
           {
-            // #region - @packageName
-            packageName: async () => {
+            // #region - @packageNameAndVersion
+            packageNameAndVersion: async () => {
               if (repoType.data === "single") {
                 const foundPackage =
                   await repositoryClient.singleProvider.getPackage();
@@ -110,11 +110,12 @@ function tagCommand(program: Command): Command {
               // If we reach here, it means an invalid type was selected
               onCommandFlowCancel("Invalid repository type.");
             },
-            // #endregion - @packageName
+            // #endregion - @packageNameAndVersion
 
             // #region - @newVersion
             newVersion: async ({ results }) => {
-              const [_name, version] = results.packageName?.split(" ") || [];
+              const [_name, version] =
+                results.packageNameAndVersion?.split(" ") || [];
 
               const suggestedVersions =
                 await releaseService.suggestVersions(version);
@@ -163,9 +164,10 @@ function tagCommand(program: Command): Command {
           {
             title: "Creating tag",
             task: async () => {
-              const { packageName, newVersion } = userConfig;
+              const { packageNameAndVersion, newVersion } = userConfig;
 
-              const [pkgName, _currentVersion] = packageName?.split(" ") || [];
+              const [pkgName, _currentVersion] =
+                packageNameAndVersion?.split(" ") || [];
 
               const tagResult = await releaseService.createTagAndPush(
                 {
@@ -178,7 +180,7 @@ function tagCommand(program: Command): Command {
                 throw new Error(tagResult.message);
               }
 
-              return `Tag ${colors.green(tagResult.data)} created successfully for package ${colors.blue(packageName)}.`;
+              return `Tag ${colors.green(tagResult.data)} created successfully for package ${colors.blue(pkgName)}.`;
             },
           },
         ]);
