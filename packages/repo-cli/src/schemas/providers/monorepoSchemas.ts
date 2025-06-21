@@ -6,7 +6,7 @@ import { packageJsonSchema } from "@schemas/packageJsonSchema";
  * Schema for validating a monorepo configuration.
  * Currently empty, can be extended with specific monorepo settings.
  */
-export const monorepoProjectConfigSchema = z.object({
+export const monorepoConfigSchema = z.object({
   release: z.object({
     tagFormat: z
       .string()
@@ -54,15 +54,15 @@ export const monorepoProjectConfigSchema = z.object({
  * Combines package.json schema with default configuration schema and adds
  * specific fields for monorepo management.
  */
-export const monorepoProjectRootPackageJsonSchema = packageJsonSchema.extend(
-  monorepoProjectConfigSchema.shape
+export const monorepoRootPackageJsonSchema = packageJsonSchema.extend(
+  monorepoConfigSchema.shape
 );
 
 /**
  * Schema for validating a package.json configuration within a monorepo.
  * Combines package.json schema with specific publish configuration.
  */
-export const monorepoProjectPackageJsonSchema = packageJsonSchema.extend({
+export const monorepoPackageJsonSchema = packageJsonSchema.extend({
   publishConfig: z.object({
     access: z
       .enum(["public", "restricted"], {

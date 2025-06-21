@@ -9,19 +9,19 @@ import semver from "semver";
 
 import type { FunctionResultPromise } from "@/types";
 import type { RepoInfo } from "@/types/repository";
-import MonorepoProjectProvider from "@lib/providers/monorepoProjectProvider";
-import singleProvider from "@lib/providers/singleProvider";
+import monorepoProvider from "@lib/providers/monorepoProvider";
+import singleProvider from "@/lib/providers/singleProvider";
 import GitClient from "@lib/gitClient";
 import { dirExists, readJsonFile } from "@utils/files";
 
 class Repository {
   public gitClient: GitClient;
-  public monorepoProjectProvider: MonorepoProjectProvider;
+  public monorepoProvider: monorepoProvider;
   public singleProvider: singleProvider;
 
   constructor() {
     this.gitClient = new GitClient();
-    this.monorepoProjectProvider = new MonorepoProjectProvider();
+    this.monorepoProvider = new monorepoProvider();
     this.singleProvider = new singleProvider();
   }
 

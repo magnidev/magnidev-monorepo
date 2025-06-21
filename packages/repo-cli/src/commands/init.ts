@@ -3,7 +3,7 @@ import prompts from "@clack/prompts";
 import colors from "picocolors";
 import z from "zod/v4";
 
-import type { MonorepoProjectConfig } from "@/types/providers/monorepo";
+import type { monorepoConfig } from "@/types/providers/monorepo";
 import type { singleConfig } from "@/types/providers/single";
 import RepositoryClient from "@lib/repositoryClient";
 import { intro, outro } from "@utils/intro";
@@ -84,7 +84,7 @@ function initCommand(program: Command): Command {
               // If --monorepo or --single is used, return the default release config
               if (useMonorepo) {
                 const { release } =
-                  repositoryClient.monorepoProjectProvider.defaultConfig;
+                  repositoryClient.monorepoProvider.defaultConfig;
 
                 return release;
               }
@@ -100,7 +100,7 @@ function initCommand(program: Command): Command {
                 message: "Enter the pre-release identifier:",
                 placeholder: "e.g., canary, beta, alpha",
                 initialValue: "canary",
-              })) as MonorepoProjectConfig["release"]["preReleaseIdentifier"];
+              })) as monorepoConfig["release"]["preReleaseIdentifier"];
 
               if (prompts.isCancel(preReleaseIdentifier)) {
                 onCommandFlowCancel();
@@ -127,7 +127,7 @@ function initCommand(program: Command): Command {
                   placeholder: "e.g., v${version}",
                   initialValue: "v${version}",
                   validate: validateTagFormat,
-                })) as MonorepoProjectConfig["release"]["tagFormat"];
+                })) as monorepoConfig["release"]["tagFormat"];
 
                 if (prompts.isCancel(tagFormat)) onCommandFlowCancel();
 
@@ -147,7 +147,7 @@ function initCommand(program: Command): Command {
                   ],
                   initialValue: "independent",
                   maxItems: 1,
-                })) as MonorepoProjectConfig["release"]["versioningStrategy"];
+                })) as monorepoConfig["release"]["versioningStrategy"];
 
                 if (prompts.isCancel(versioningStrategy)) onCommandFlowCancel();
 
@@ -155,7 +155,7 @@ function initCommand(program: Command): Command {
                   tagFormat,
                   versioningStrategy,
                   preReleaseIdentifier,
-                } satisfies MonorepoProjectConfig["release"];
+                } satisfies monorepoConfig["release"];
               }
               if (results.repoType === "single") {
                 return {
@@ -174,7 +174,7 @@ function initCommand(program: Command): Command {
               // If --monorepo or --single is used, return the default workspaces config
               if (useMonorepo) {
                 const { workspaces } =
-                  repositoryClient.monorepoProjectProvider.defaultConfig;
+                  repositoryClient.monorepoProvider.defaultConfig;
 
                 return workspaces;
               }
@@ -286,10 +286,10 @@ function initCommand(program: Command): Command {
           {
             title: "Initializing Monorepo configuration...",
             task: async () => {
-              const client = repositoryClient.monorepoProjectProvider;
+              const client = repositoryClient.monorepoProvider;
 
               const { success, message } = await client.init(
-                userConfig as MonorepoProjectConfig
+                userConfig as monorepoConfig
               );
               if (!success) onCommandFlowCancel(message);
               return message;

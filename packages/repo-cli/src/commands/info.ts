@@ -3,7 +3,7 @@ import { Command } from "commander";
 import colors from "picocolors";
 
 import type { RepoInfo } from "@/types/repository";
-import type { MonorepoProjectPackageJson } from "@/types/providers/monorepo";
+import type { monorepoPackageJson } from "@/types/providers/monorepo";
 import RepositoryClient from "@lib/repositoryClient";
 import GitClient from "@lib/gitClient";
 import { intro } from "@utils/intro";
@@ -121,9 +121,7 @@ async function displayPackageInfo({
     );
   }
 
-  const getPackageAuthor = (
-    author: MonorepoProjectPackageJson["author"]
-  ): string => {
+  const getPackageAuthor = (author: monorepoPackageJson["author"]): string => {
     if (!author) return "Unknown";
     if (typeof author === "string") return author;
     return `${author.name || "Unknown"}${
@@ -133,9 +131,7 @@ async function displayPackageInfo({
 
   if (repoInfo.repoType === "monorepo") {
     const packageInfo =
-      await repositoryClient.monorepoProjectProvider.getPackageByName(
-        packageName
-      );
+      await repositoryClient.monorepoProvider.getPackageByName(packageName);
 
     if (!packageInfo.success || !packageInfo.data) {
       onCommandFlowCancel(packageInfo.message);
@@ -213,8 +209,7 @@ async function displayAllInfo({
   if (repoInfo.repoType === "monorepo") {
     prompts.log.info("Displaying all packages in the monorepo project.");
 
-    const packagesInfo =
-      await repositoryClient.monorepoProjectProvider.getPackages();
+    const packagesInfo = await repositoryClient.monorepoProvider.getPackages();
 
     if (!packagesInfo.success || !packagesInfo.data) {
       onCommandFlowCancel(packagesInfo.message);

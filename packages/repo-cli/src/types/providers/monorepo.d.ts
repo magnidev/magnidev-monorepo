@@ -2,26 +2,24 @@ import { z } from "zod/v4-mini";
 import type { DefaultLogFields, ListLogLine } from "simple-git";
 
 import {
-  monorepoProjectConfigSchema,
-  monorepoProjectRootPackageJsonSchema,
-  monorepoProjectPackageJsonSchema,
+  monorepoConfigSchema,
+  monorepoRootPackageJsonSchema,
+  monorepoPackageJsonSchema,
 } from "@schemas/providers/monorepoSchemas";
 
 /**
  * @description The configuration schema for monorepo projects.
  */
-export type MonorepoProjectConfig = z.infer<typeof monorepoProjectConfigSchema>;
+export type monorepoConfig = z.infer<typeof monorepoConfigSchema>;
 
 /**
  * @description The package.json schema for monorepo root projects.
  */
-export type MonorepoProjectRootPackageJson = z.infer<
-  typeof monorepoProjectRootPackageJsonSchema
+export type monorepoRootPackageJson = z.infer<
+  typeof monorepoRootPackageJsonSchema
 >;
 
 /**
  * @description The package.json schema for monorepo packages.
  */
-export type MonorepoProjectPackageJson = z.infer<
-  typeof monorepoProjectPackageJsonSchema
->;
+export type monorepoPackageJson = z.infer<typeof monorepoPackageJsonSchema>;

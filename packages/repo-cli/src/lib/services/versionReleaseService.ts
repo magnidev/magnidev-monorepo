@@ -44,7 +44,7 @@ export class VersionReleaseService {
       } // Get configuration
       const configResult =
         repoType.data === "monorepo"
-          ? await this.repositoryClient.monorepoProjectProvider.getConfig()
+          ? await this.repositoryClient.monorepoProvider.getConfig()
           : await this.repositoryClient.singleProvider.getConfig();
 
       if (!configResult.success || !configResult.data) {
@@ -130,7 +130,7 @@ export class VersionReleaseService {
         );
       } else {
         const packageResult =
-          await this.repositoryClient.monorepoProjectProvider.getPackageByName(
+          await this.repositoryClient.monorepoProvider.getPackageByName(
             options.packageName!
           );
         if (!packageResult.success || !packageResult.data) {

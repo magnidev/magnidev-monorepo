@@ -68,7 +68,7 @@ function commitCommand(program: Command): Command {
         // Get project configuration
         const configResult =
           repoType.data === "monorepo"
-            ? await repositoryClient.monorepoProjectProvider.getConfig()
+            ? await repositoryClient.monorepoProvider.getConfig()
             : await repositoryClient.singleProvider.getConfig();
         if (!configResult.success || !configResult.data) {
           onCommandFlowCancel(configResult.message);
@@ -92,7 +92,7 @@ function commitCommand(program: Command): Command {
 
               if (repoType.data === "monorepo") {
                 const foundPackages =
-                  await repositoryClient.monorepoProjectProvider.getPackages();
+                  await repositoryClient.monorepoProvider.getPackages();
                 if (!foundPackages.success || !foundPackages.data) {
                   onCommandFlowCancel(foundPackages.message);
                 }
