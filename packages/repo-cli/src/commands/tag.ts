@@ -169,12 +169,13 @@ function tagCommand(program: Command): Command {
               const [pkgName, _currentVersion] =
                 packageNameAndVersion?.split(" ") || [];
 
-              const tagResult = await releaseService.createTagAndPush(
+              const tagResult = await releaseService.createTag(
                 {
                   packageName: pkgName as string,
                   version: newVersion as string,
                 },
                 {
+                  shouldPush: true, // TODO: Make this configurable
                   dryRun: dryRun,
                 }
               );

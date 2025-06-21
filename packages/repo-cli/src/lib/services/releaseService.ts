@@ -89,15 +89,16 @@ class ReleaseService {
   }
   // #endregion - @suggestVersions
 
-  // #region - @createTagAndPush
+  // #region - @createTag
   /**
    * @description Creates a new tag in the repository.
    * @param tagName The name of the tag to create.
    * @returns A promise that resolves to a FunctionResult indicating success or failure.
    */
-  public async createTagAndPush(
+  public async createTag(
     data: { packageName: string; version: string },
     options: {
+      shouldPush?: boolean;
       dryRun?: boolean;
     }
   ): FunctionResultPromise<string | null> {
@@ -106,6 +107,7 @@ class ReleaseService {
     let dataResult: string | null = null;
 
     const { packageName, version } = data;
+    const { shouldPush, dryRun } = options;
 
     try {
       const repoType = await this.repositoryClient.getRepoType();
@@ -148,7 +150,7 @@ class ReleaseService {
 
       const tagMessage = `Release ${tagName}`;
 
-      if (options.dryRun) {
+      if (dryRun) {
         // If dry run, just return the tag name without creating it
         return {
           success: true,
@@ -166,10 +168,12 @@ class ReleaseService {
         throw new Error(createTagResult.message);
       }
 
-      // Push the tag to the remote repository
-      const pushResult = await this.gitClient.pushTags();
-      if (!pushResult.success) {
-        throw new Error(pushResult.message);
+      if (shouldPush) {
+        // Push the tag to the remote repository
+        const pushResult = await this.gitClient.pushTags();
+        if (!pushResult.success) {
+          throw new Error(pushResult.message);
+        }
       }
 
       success = true;
@@ -190,7 +194,7 @@ class ReleaseService {
       data: dataResult,
     };
   }
-  // #endregion - @createTagAndPush
+  // #endregion - @createTag
 }
 
 export default ReleaseService;
