@@ -64,15 +64,6 @@ function commitCommand(program: Command): Command {
         if (!repoType.success || !repoType.data) {
           onCommandFlowCancel(repoType.message);
         }
-
-        // Get project configuration
-        const configResult =
-          repoType.data === "monorepo"
-            ? await repositoryClient.monorepoProvider.getConfig()
-            : await repositoryClient.singleProvider.getConfig();
-        if (!configResult.success || !configResult.data) {
-          onCommandFlowCancel(configResult.message);
-        }
         // #endregion - Initialize Clients
 
         // #region - Command Flow
@@ -317,7 +308,7 @@ function commitCommand(program: Command): Command {
 
         // #endregion - Business Logic
       } catch (error: any) {
-        onCommandFlowError(error as Error);
+        onCommandFlowError(error);
       }
     });
 }
