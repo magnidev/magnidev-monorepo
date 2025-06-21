@@ -96,15 +96,16 @@ class ReleaseService {
    * @returns A promise that resolves to a FunctionResult indicating success or failure.
    */
   public async createTagAndPush(
+    data: { packageName: string; version: string },
     options: {
       dryRun?: boolean;
-    },
-    packageName: string,
-    version: string
+    }
   ): FunctionResultPromise<string | null> {
     let success: boolean = false;
     let message: string = "";
-    let data: string | null = null;
+    let dataResult: string | null = null;
+
+    const { packageName, version } = data;
 
     try {
       const repoType = await this.repositoryClient.getRepoType();
@@ -173,7 +174,7 @@ class ReleaseService {
 
       success = true;
       message = "Git tag created successfully";
-      data = tagName;
+      dataResult = tagName;
     } catch (error) {
       success = false;
       message = "Failed to create git tag";
@@ -186,7 +187,7 @@ class ReleaseService {
     return {
       success,
       message,
-      data,
+      data: dataResult,
     };
   }
   // #endregion - @createTagAndPush

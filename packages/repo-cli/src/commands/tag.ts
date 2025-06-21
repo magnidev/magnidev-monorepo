@@ -48,11 +48,11 @@ function tagCommand(program: Command): Command {
       });
 
       prompts.intro(colors.white(intro));
-      // #endregion Initialization
 
       if (dryRun) {
         prompts.log.info(`Dry run mode ${colors.blue("enabled")}.`);
       }
+      // #endregion Initialization
 
       try {
         // #region - Initialize Clients
@@ -171,10 +171,12 @@ function tagCommand(program: Command): Command {
 
               const tagResult = await releaseService.createTagAndPush(
                 {
-                  dryRun: dryRun,
+                  packageName: pkgName as string,
+                  version: newVersion as string,
                 },
-                pkgName as string,
-                newVersion as string
+                {
+                  dryRun: dryRun,
+                }
               );
               if (!tagResult.success || !tagResult.data) {
                 throw new Error(tagResult.message);
