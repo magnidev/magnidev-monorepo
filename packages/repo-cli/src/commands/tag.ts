@@ -4,7 +4,7 @@ import colors from "picocolors";
 
 import RepositoryService from "@services/repositoryService";
 import ReleaseService from "@services/releaseService";
-import { intro, outro } from "@utils/intro";
+import { dryRunMessage, introMessage, outroMessage } from "@utils/texts";
 import { onCommandFlowCancel, onCommandFlowError } from "@utils/events";
 
 type TagCommandOptions = {
@@ -43,10 +43,10 @@ function tagCommand(program: Command): Command {
         },
       });
 
-      prompts.intro(colors.white(intro));
+      prompts.intro(introMessage);
 
       if (dryRun) {
-        prompts.log.info(`Dry run mode ${colors.blue("enabled")}.`);
+        prompts.log.info(dryRunMessage);
       }
       // #endregion Initialization
 
@@ -211,7 +211,7 @@ function tagCommand(program: Command): Command {
           onCommandFlowCancel("Tag cancelled.");
         }
 
-        prompts.outro(outro);
+        prompts.outro(outroMessage);
         // #endregion - Business Logic
       } catch (error: any) {
         onCommandFlowError(

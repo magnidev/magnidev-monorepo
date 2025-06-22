@@ -1,11 +1,10 @@
 import prompts from "@clack/prompts";
 import { Command } from "commander";
-import colors from "picocolors";
 
 import type { RepoInfo } from "@/types/services/repositoryService";
 import type { MonorepoPackageJson } from "@/types/providers/monorepoProvider";
 import RepositoryService from "@services/repositoryService";
-import { intro } from "@utils/intro";
+import { introMessage, outroMessage } from "@utils/texts";
 import { formatSections } from "@utils/formatter";
 import { onCommandFlowCancel, onCommandFlowError } from "@utils/events";
 
@@ -52,7 +51,7 @@ function infoCommand(program: Command): Command {
         },
       });
 
-      prompts.intro(colors.white(intro));
+      prompts.intro(introMessage);
       // #endregion - Initialization
 
       try {
@@ -97,7 +96,7 @@ function infoCommand(program: Command): Command {
           return;
         }
 
-        prompts.outro("🚀 Repo CLI by @magnidev, happy coding!");
+        prompts.outro(outroMessage);
       } catch (error: any) {
         onCommandFlowError(error);
       }

@@ -1,8 +1,7 @@
 import { Command } from "commander";
 import prompts from "@clack/prompts";
-import colors from "picocolors";
 
-import { intro, outro } from "@utils/intro";
+import { introMessage, outroMessage } from "@utils/texts";
 import { onCommandFlowError } from "@utils/events";
 
 type ReleaseCommandOptions = {
@@ -27,11 +26,11 @@ function releaseCommand(program: Command): Command {
       // #region Initialization
       const { dryRun, ci } = options;
 
-      prompts.intro(colors.white(intro));
+      prompts.intro(introMessage);
       // #endregion Initialization
 
       try {
-        prompts.outro(outro);
+        prompts.outro(outroMessage);
       } catch (error: any) {
         onCommandFlowError(
           error instanceof Error ? error : new Error(String(error))

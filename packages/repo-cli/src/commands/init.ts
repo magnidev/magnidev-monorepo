@@ -1,12 +1,11 @@
 import { Command } from "commander";
 import prompts from "@clack/prompts";
-import colors from "picocolors";
 import z from "zod/v4";
 
 import type { MonorepoConfig } from "@/types/providers/monorepoProvider";
 import type { SingleConfig } from "@/types/providers/singleProvider";
-import RepositoryClient from "@/lib/services/repositoryService";
-import { intro, outro } from "@utils/intro";
+import RepositoryService from "@services/repositoryService";
+import { introMessage, outroMessage } from "@utils/texts";
 import { onCommandFlowCancel, onCommandFlowError } from "@utils/events";
 import {
   generateSingleWorkflow,
@@ -39,7 +38,7 @@ function initCommand(program: Command): Command {
         },
       });
 
-      prompts.intro(colors.white(intro));
+      prompts.intro(introMessage);
 
       // Validate that only one of --monorepo or --single is used
       if (useMonorepo && useSingle) {
@@ -50,7 +49,7 @@ function initCommand(program: Command): Command {
       // #endregion - Initialization
 
       try {
-        const repositoryClient = new RepositoryClient();
+        const repositoryService = new RepositoryService();
 
         // #region - Command Flow
         const userConfig = await prompts.group(
@@ -83,12 +82,12 @@ function initCommand(program: Command): Command {
             release: async ({ results }) => {
               // If --monorepo or --single is used, return the default release config
               if (useMonorepo) {
-                const { release } = repositoryClient.monorepoProvider.config;
+                const { release } = repositoryService.monorepoProvider.config;
 
                 return release;
               }
               if (useSingle) {
-                const { release } = repositoryClient.singleProvider.config;
+                const { release } = repositoryService.singleProvider.config;
 
                 return release;
               }
@@ -171,7 +170,8 @@ function initCommand(program: Command): Command {
             workspaces: async ({ results }) => {
               // If --monorepo or --single is used, return the default workspaces config
               if (useMonorepo) {
-                const { workspaces } = repositoryClient.monorepoProvider.config;
+                const { workspaces } =
+                  repositoryService.monorepoProvider.config;
 
                 return workspaces;
               }
@@ -216,7 +216,7 @@ function initCommand(program: Command): Command {
 
               if (useSingle) {
                 const { publishConfig } =
-                  repositoryClient.singleProvider.config;
+                  repositoryService.singleProvider.config;
 
                 return publishConfig;
               }
@@ -283,7 +283,7 @@ function initCommand(program: Command): Command {
           {
             title: "Initializing Monorepo configuration...",
             task: async () => {
-              const client = repositoryClient.monorepoProvider;
+              const client = repositoryService.monorepoProvider;
 
               const { success, message } = await client.init(
                 userConfig as MonorepoConfig
@@ -296,7 +296,7 @@ function initCommand(program: Command): Command {
           {
             title: "Initializing Single Project configuration...",
             task: async () => {
-              const client = repositoryClient.singleProvider;
+              const client = repositoryService.singleProvider;
 
               const { success, message } = await client.init(
                 userConfig as SingleConfig
@@ -355,7 +355,7 @@ function initCommand(program: Command): Command {
           );
         }
 
-        prompts.outro(outro);
+        prompts.outro(outroMessage);
 
         // #endregion Business Logic
       } catch (error: any) {
