@@ -294,7 +294,7 @@ class GitClient {
 
     try {
       const status = await this.getStatus();
-      if (!status || !status.data) {
+      if (!status.success || !status.data) {
         throw new Error("Failed to retrieve status or no files found");
       }
 
