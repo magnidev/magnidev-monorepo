@@ -21,7 +21,7 @@ function tagCommand(program: Command): Command {
     )
     .option(
       "-d, --dry-run",
-      "simulate the release process without making any changes",
+      "simulate the creating tag process without making any changes",
       false
     )
     .option(
