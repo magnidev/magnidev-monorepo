@@ -14,19 +14,16 @@ import type {
 import monorepoProvider from "@providers/monorepoProvider";
 import singleProvider from "@providers/singleProvider";
 import GitClient from "@lib/gitClient";
-import GitHubClient from "@lib/githubClient";
 import { dirExists, readJsonFile } from "@utils/files";
 
 class Repository {
   public gitClient: GitClient;
-  public githubClient: GitHubClient;
 
   public monorepoProvider: monorepoProvider;
   public singleProvider: singleProvider;
 
   constructor() {
     this.gitClient = new GitClient();
-    this.githubClient = new GitHubClient();
 
     this.monorepoProvider = new monorepoProvider();
     this.singleProvider = new singleProvider();
