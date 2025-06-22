@@ -21,7 +21,7 @@ function commitCommand(program: Command): Command {
     .description("commit changes to a Git repository")
     .option(
       "-d, --dry-run",
-      "simulate the release process without making any changes",
+      "simulate the commit process without making any changes",
       false
     )
     .option(
