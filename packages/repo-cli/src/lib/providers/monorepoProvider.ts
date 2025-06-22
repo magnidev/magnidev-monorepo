@@ -372,6 +372,7 @@ class MonorepoProvider {
 
     return { success, message, data };
   }
+  // #endregion - @getRootPackageJson
 }
 
 export default MonorepoProvider;
