@@ -2,7 +2,7 @@
 
 import { Command } from "commander";
 
-import { intro } from "@/utils/intro";
+import { intro } from "@utils/intro";
 import initCommand from "@commands/init";
 import infoCommand from "@commands/info";
 import commitCommand from "@commands/commit";
