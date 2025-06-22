@@ -6,12 +6,14 @@
 
 import semver from "semver";
 
-import type { FunctionResultPromise } from "@/types";
+import type { FunctionResult, FunctionResultPromise } from "@/types";
 import type {
   CommitChangesResult,
   CreateTagResult,
+  GroupCommitsByTypeResult,
   SuggestVersionsResult,
 } from "@/types/services/releaseService";
+import type { Commit } from "@/types/gitClient";
 import RepositoryClient from "@services/repositoryService";
 
 class ReleaseService {
@@ -186,7 +188,7 @@ class ReleaseService {
   // #region - @createTag
   /**
    * @description Creates a new tag in the repository.
-   * @param tagName The name of the tag to create.
+   * @param data The data containing the package name and version.
    * @returns A promise that resolves to a FunctionResult indicating success or failure.
    */
   public async createTag(
@@ -295,6 +297,224 @@ class ReleaseService {
     };
   }
   // #endregion - @createTag
+
+  // #region - @generateReleaseNotes
+  /**
+   * @description Generates release notes for the specified package and version.
+   * @param data The data containing the tag name.
+   * @returns The generated release notes.
+   */
+  public async generateReleaseNotes(data: {
+    tagName: string;
+  }): FunctionResultPromise<string> {
+    let success: boolean = false;
+    let message: string = "";
+    let dataResult: string = "";
+
+    const { tagName } = data;
+
+    try {
+      const repoType = await this.repositoryClient.getRepoType();
+      if (!repoType.success || !repoType.data) {
+        throw new Error(repoType.message);
+      }
+
+      let commits: Commit[] = [];
+
+      const commitsSinceLatestTag =
+        await this.gitClient.getCommitsSinceLastTag();
+
+      if (commitsSinceLatestTag.success && commitsSinceLatestTag.data) {
+        commits = commitsSinceLatestTag.data;
+      } else {
+        const allCommits = await this.gitClient.getCommits();
+        if (!allCommits.success || !allCommits.data) {
+          throw new Error(allCommits.message);
+        }
+
+        commits = allCommits.data;
+      }
+
+      let filteredCommits: Commit[] = [];
+
+      if (repoType.data === "monorepo") {
+        const config = await this.monorepoProvider.getConfig();
+        if (!config.success || !config.data) {
+          throw new Error(config.message);
+        }
+
+        const versioningStrategy = config.data.release.versioningStrategy;
+
+        if (versioningStrategy === "independent") {
+          const commitsForPackage =
+            await this.monorepoProvider.filterCommitsForPackage({
+              commits: commits,
+              pkgName: `@magnidev/repo-cli`,
+            });
+
+          if (!commitsForPackage.success || !commitsForPackage.data) {
+            throw new Error(commitsForPackage.message);
+          }
+
+          filteredCommits = commitsForPackage.data;
+        } else if (versioningStrategy === "fixed") {
+          // For fixed versioning, we consider all commits since the last tag
+
+          filteredCommits = commits;
+        }
+      } else if (repoType.data === "single") {
+        // For single project, we consider all commits since the last tag
+
+        filteredCommits = commits;
+      }
+
+      if (filteredCommits.length === 0) {
+        throw new Error("");
+      }
+
+      const releaseNotes = [`\n## Changes in ${tagName}\n`];
+
+      // Group commits by type for better organization
+      const commitsByType = this.groupCommitsByType({
+        commits: filteredCommits,
+      });
+      if (!commitsByType.success || !commitsByType.data) {
+        throw new Error(commitsByType.message);
+      }
+
+      // Add commits in order of importance
+      const typeOrder = [
+        "feat",
+        "fix",
+        "perf",
+        "refactor",
+        "docs",
+        "style",
+        "test",
+        "chore",
+        "other",
+      ];
+
+      for (const type of typeOrder) {
+        if (commitsByType.data[type] && commitsByType.data[type].length > 0) {
+          const typeLabel = this.getTypeLabel(type);
+
+          releaseNotes.push(`\n### ${typeLabel}`);
+          releaseNotes.push("");
+
+          for (const commit of commitsByType.data[type]) {
+            const message = commit.message.split("\n")[0];
+            const author = commit.author;
+            // Remove conventional commit prefix if present
+            const cleanMessage = message.replace(
+              /^(feat|fix|docs|style|refactor|perf|test|chore)(\(.+?\))?:\s*/,
+              ""
+            );
+            releaseNotes.push(
+              `- ${cleanMessage}${author ? ` by ${author}` : ""}`
+            );
+          }
+          releaseNotes.push(""); // Add empty line after each section
+        }
+      }
+
+      success = true;
+      message = "Release notes generated successfully";
+      dataResult = releaseNotes.join("\n");
+    } catch (error) {
+      success = false;
+      message = "Failed to generate release notes";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
+    }
+
+    return {
+      success,
+      message,
+      data: dataResult,
+    };
+  }
+  // #endregion - @generateReleaseNotes
+
+  // #region - @groupCommitsByType
+  /**
+   * @description Groups commits by their conventional commit type.
+   * @param data The commits to group.
+   * @returns Commits grouped by type.
+   */
+  private groupCommitsByType(data: {
+    commits: Commit[];
+  }): FunctionResult<GroupCommitsByTypeResult> {
+    let success: boolean = false;
+    let message: string = "";
+    let dataResult: GroupCommitsByTypeResult = {};
+
+    const { commits } = data;
+
+    try {
+      const groups: GroupCommitsByTypeResult = {};
+
+      for (const commit of commits) {
+        const message = commit.message;
+        const match = message.match(
+          /^(feat|fix|docs|style|refactor|perf|test|chore)(\([^)]*\))?:/
+        );
+
+        let type = "other";
+        if (match) {
+          type = match[1];
+        }
+
+        if (!groups[type]) {
+          groups[type] = [];
+        }
+        groups[type].push(commit);
+      }
+
+      success = true;
+      message = "Commits grouped by type successfully";
+      dataResult = groups;
+    } catch (error) {
+      success = false;
+      message = "Failed to group commits by type";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
+    }
+
+    return {
+      success,
+      message,
+      data: dataResult,
+    };
+  }
+  // #endregion - @groupCommitsByType
+
+  // #region - @getTypeLabel
+  /**
+   * @description Gets a human-readable label for a commit type.
+   * @param type The commit type.
+   * @returns The human-readable label.
+   */
+  private getTypeLabel(type: string): string {
+    const labels: Record<string, string> = {
+      feat: "🚀 Features",
+      fix: "🐛 Bug Fixes",
+      perf: "⚡ Performance Improvements",
+      refactor: "♻️ Code Refactoring",
+      docs: "📚 Documentation",
+      style: "💄 Styles",
+      test: "🧪 Tests",
+      chore: "🔧 Chores",
+      other: "📝 Other Changes",
+    };
+
+    return labels[type] || "📝 Other Changes";
+  }
+  // #endregion - @getTypeLabel
 }
 
 export default ReleaseService;

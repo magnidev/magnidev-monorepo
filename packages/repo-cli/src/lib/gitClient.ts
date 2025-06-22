@@ -9,6 +9,7 @@ import simpleGit, {
   type CommitResult,
   type StatusResult,
   type SimpleGit,
+  type TagResult,
 } from "simple-git";
 import colors from "picocolors";
 
@@ -194,6 +195,53 @@ class GitClient {
     };
   }
   // #endregion - @getCommits
+
+  // #region - @getCommitFiles
+  /**
+   * @description Gets the list of files changed in a specific commit.
+   * @param commitHash The hash of the commit.
+   * @returns {FunctionResultPromise<string[] | null>} A promise that resolves to an array of file paths changed in the commit.
+   */
+  public async getCommitFiles(
+    commitHash: string
+  ): FunctionResultPromise<string[] | null> {
+    let success: boolean = false;
+    let message: string = "";
+    let data: string[] | null = null;
+
+    try {
+      // Get the files changed in this commit using git show
+      const filesOutput = await this.client.raw([
+        "show",
+        "--pretty=format:",
+        "--name-only",
+        commitHash,
+      ]);
+
+      const files = filesOutput
+        .split("\n")
+        .filter((line) => line.trim() !== "")
+        .map((file) => file.trim());
+
+      success = true;
+      message = "Commit files retrieved successfully.";
+      data = files;
+    } catch (error) {
+      success = false;
+      message = "Failed to get commit files";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
+    }
+
+    return {
+      success,
+      message,
+      data,
+    };
+  }
+  // #endregion - @getCommitFiles
 
   // #region - @getOwnerAndRepo
   /**
@@ -534,10 +582,10 @@ class GitClient {
    * @description Retrieves all tags from the repository.
    * @returns {FunctionResultPromise<string[]>} A promise that resolves to an array of tag names.
    */
-  public async getTags(): FunctionResultPromise<string[] | null> {
+  public async getTags(): FunctionResultPromise<TagResult | null> {
     let success: boolean = false;
     let message: string = "";
-    let data: string[] | null = null;
+    let data: TagResult | null = null;
 
     try {
       const tags = await this.client.tags();
@@ -547,7 +595,7 @@ class GitClient {
 
       success = true;
       message = "Tags retrieved successfully";
-      data = tags.all;
+      data = tags;
     } catch (error) {
       success = false;
       message = "Failed to retrieve tags";
@@ -568,12 +616,11 @@ class GitClient {
   // #region - @getCommitsSinceTag
   /**
    * @description Retrieves commits since the latest tag or since a specific tag.
-   * @param tagName Optional tag name to start from. If not provided, uses the latest tag.
    * @returns {FunctionResultPromise<Commit[] | null>} A promise that resolves to commits since the tag.
    */
-  public async getCommitsSinceTag(
-    tagName: string
-  ): FunctionResultPromise<Commit[] | null> {
+  public async getCommitsSinceLastTag(): FunctionResultPromise<
+    Commit[] | null
+  > {
     let success: boolean = false;
     let message: string = "";
     let data: Commit[] | null = null;
@@ -584,9 +631,8 @@ class GitClient {
       if (!tags.success || !tags.data) {
         throw new Error(tags.message);
       }
-      if (!tags.data.includes(tagName)) {
-        throw new Error(`Tag '${tagName}' does not exist`);
-      }
+
+      const tagName = tags.data.latest;
 
       // Get commits since the tag
       const log = await this.client.log({
@@ -608,9 +654,7 @@ class GitClient {
       }
     } catch (error) {
       success = false;
-      message = tagName
-        ? `Failed to retrieve commits since tag '${tagName}'`
-        : "Failed to retrieve commits since latest tag";
+      message = "Failed to retrieve commits since latest tag";
 
       if (error instanceof Error) {
         message = error.message;

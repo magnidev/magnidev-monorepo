@@ -19,3 +19,7 @@ export type CommitChangesResult = { changes: string[] } | null;
 export type CreateTagResult = {
   tagName: string;
 } | null;
+
+export type GroupCommitsByTypeResult = {
+  [key: string]: any[];
+};

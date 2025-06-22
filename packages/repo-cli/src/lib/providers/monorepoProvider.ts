@@ -13,6 +13,8 @@ import type {
   MonorepoPackageJson,
   MonorepoRootPackageJson,
 } from "@/types/providers/monorepoProvider";
+import type { Commit } from "@/types/gitClient";
+import GitClient from "@lib/gitClient";
 import {
   monorepoConfigSchema,
   monorepoPackageJsonSchema,
@@ -22,6 +24,8 @@ import { dirExists, readJsonFile, writeJsonFile } from "@utils/files";
 import { ignorePaths } from "@utils/ignorePaths";
 
 class MonorepoProvider {
+  private gitClient: GitClient;
+
   public config: MonorepoConfig = {
     release: {
       tagFormat: "${name}@${version}",
@@ -32,7 +36,9 @@ class MonorepoProvider {
     repoType: "monorepo",
   };
 
-  constructor() {}
+  constructor(gitClient: GitClient) {
+    this.gitClient = gitClient;
+  }
 
   // #region - @parseConfig
   /**
@@ -373,6 +379,158 @@ class MonorepoProvider {
     return { success, message, data };
   }
   // #endregion - @getRootPackageJson
+  // #region - @filterCommitsForPackage
+  /**
+   * @description Filters commits to only include those relevant to the specific package.
+   * Uses file-based analysis, conventional commit scopes, and package name mentions.
+   * @param data Object containing the package name and an array of commits to filter.
+   * @returns Filtered commits relevant to the package.
+   */
+  public async filterCommitsForPackage(data: {
+    pkgName: string;
+    commits: Commit[];
+  }): FunctionResultPromise<Commit[] | null> {
+    let success: boolean = false;
+    let message: string = "";
+    let dataResult: Commit[] | null = null;
+
+    const { pkgName, commits } = data;
+
+    try {
+      // Get the package directory path relative to repo root
+      const packagePath = await this.getPackagePath(pkgName);
+      if (!packagePath.success || !packagePath.data) {
+        throw new Error(`Could not determine path for package: ${pkgName}`);
+      }
+
+      const filteredCommits = await Promise.all(
+        commits.map(async (commit) => {
+          const commitMessage = commit.message;
+          let shouldInclude = false;
+          let reason = "";
+
+          // Strategy 1: File-based analysis (primary method)
+          const filesChanged = await this.gitClient.getCommitFiles(commit.hash);
+          if (filesChanged.success && filesChanged.data) {
+            const affectsPackage = filesChanged.data.some((filePath) =>
+              filePath.startsWith(packagePath.data!)
+            );
+            if (affectsPackage) {
+              shouldInclude = true;
+              reason = "file-based";
+            }
+          }
+
+          // Strategy 2: Conventional commit scope analysis (fallback)
+          if (!shouldInclude) {
+            const conventionalMatch = commitMessage.match(
+              /^(feat|fix|docs|style|refactor|perf|test|chore|build|ci)(\(([^)]+)\))?:/
+            );
+
+            if (conventionalMatch && conventionalMatch[3]) {
+              const scope = conventionalMatch[3];
+              if (
+                scope === pkgName ||
+                scope.includes(pkgName) ||
+                scope === packagePath.data?.split("/").pop() // package folder name
+              ) {
+                shouldInclude = true;
+                reason = "scope-based";
+              }
+            }
+          }
+
+          // Strategy 3: Package name mention in commit message (fallback)
+          if (!shouldInclude) {
+            if (commitMessage.includes(pkgName)) {
+              shouldInclude = true;
+              reason = "name-mention";
+            }
+          }
+
+          return shouldInclude ? { ...commit, filterReason: reason } : null;
+        })
+      );
+
+      const validCommits = filteredCommits.filter(Boolean) as (Commit & {
+        filterReason: string;
+      })[];
+
+      success = true;
+      message = `Filtered ${validCommits.length} commits for package '${pkgName}'`;
+      dataResult = validCommits;
+    } catch (error: any) {
+      success = false;
+      message = "Failed to filter commits for package.";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
+    }
+
+    return {
+      success,
+      message,
+      data: dataResult,
+    };
+  }
+  // #endregion - @filterCommitsForPackage
+
+  // #region - @getPackagePath
+  /**
+   * @description Gets the relative path of a package within the monorepo.
+   * @param packageName The name of the package.
+   * @returns The relative path to the package directory.
+   */
+  private async getPackagePath(
+    packageName: string
+  ): FunctionResultPromise<string | null> {
+    let success: boolean = false;
+    let message: string = "";
+    let data: string | null = null;
+
+    try {
+      const packages = await this.getPackages();
+      if (!packages.success || !packages.data) {
+        throw new Error(packages.message);
+      }
+
+      // Find the package and determine its path
+      for (const workspace of this.config.workspaces) {
+        const packagePaths = await fg(workspace, {
+          cwd: process.cwd(),
+          ignore: ignorePaths,
+          onlyFiles: false,
+          absolute: false, // We want relative paths
+        });
+
+        for (const packagePath of packagePaths) {
+          const packageJsonPath = path.join(
+            process.cwd(),
+            packagePath,
+            "package.json"
+          );
+          if (dirExists(packageJsonPath)) {
+            const packageJsonContent = await readJsonFile(packageJsonPath);
+            if (packageJsonContent && packageJsonContent.name === packageName) {
+              success = true;
+              message = "Package path found successfully.";
+              data = packagePath + "/"; // Add trailing slash for path matching
+              return { success, message, data };
+            }
+          }
+        }
+      }
+
+      throw new Error(`Package '${packageName}' not found in workspaces`);
+    } catch (error) {
+      success = false;
+      message = `Failed to get package path: ${error instanceof Error ? error.message : String(error)}`;
+    }
+
+    return { success, message, data };
+  }
+  // #endregion - @getPackagePath
 }
 
 export default MonorepoProvider;

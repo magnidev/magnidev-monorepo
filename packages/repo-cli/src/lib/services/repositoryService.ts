@@ -25,7 +25,7 @@ class RepositoryService {
   constructor() {
     this.gitClient = new GitClient();
 
-    this.monorepoProvider = new monorepoProvider();
+    this.monorepoProvider = new monorepoProvider(this.gitClient);
     this.singleProvider = new singleProvider();
   }
 
