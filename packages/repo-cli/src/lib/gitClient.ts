@@ -256,7 +256,8 @@ class GitClient {
 
       const hasChanges: boolean =
         status.data.files.length === 0 || status.data.not_added.length === 0;
-      if (hasChanges) {
+
+      if (!hasChanges) {
         throw new Error("There are no changes in the repository");
       }
 
