@@ -68,6 +68,8 @@ function commitCommand(program: Command): Command {
         if (!hasChanges.success || !hasChanges.data) {
           onCommandFlowCancel("No changes to commit.");
         }
+        console.log("hasChanges", hasChanges);
+        console.log("hasChanges.data", hasChanges.data);
 
         // Get uncommitted changes
         const changes = hasChanges.data!;
