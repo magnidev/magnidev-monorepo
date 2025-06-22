@@ -55,15 +55,13 @@ class Repository {
         throw new Error("Invalid package.json format");
       }
 
-      // Check if the root package.json has a "workspaces" field
-      const isMonorepo =
-        rootPackageJson.workspaces !== null &&
-        Array.isArray(rootPackageJson.workspaces);
+      const isMonorepo = rootPackageJson.repoType === "monorepo";
+      const isSingle = rootPackageJson.repoType === "single";
 
       if (isMonorepo) {
         message = "Monorepo detected";
         data = "monorepo";
-      } else {
+      } else if (isSingle) {
         message = "Single repository detected";
         data = "single";
       }
