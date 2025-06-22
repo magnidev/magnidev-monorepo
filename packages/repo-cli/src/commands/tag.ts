@@ -2,7 +2,6 @@ import { Command } from "commander";
 import prompts from "@clack/prompts";
 import colors from "picocolors";
 
-import type { VersionType } from "@/types/services/repositoryService";
 import RepositoryService from "@services/repositoryService";
 import ReleaseService from "@services/releaseService";
 import { intro, outro } from "@utils/intro";
@@ -10,8 +9,9 @@ import { onCommandFlowCancel, onCommandFlowError } from "@utils/events";
 
 type TagCommandOptions = {
   dryRun?: boolean;
-  tag?: string;
-  type?: VersionType;
+
+  packageNameAndVersion?: string;
+  newVersion?: string;
 };
 
 function tagCommand(program: Command): Command {
@@ -26,16 +26,16 @@ function tagCommand(program: Command): Command {
       false
     )
     .option(
-      "-t, --tag <tag>",
-      "specific tag to use (e.g., v1.0.0 or v1.0.0-beta)"
+      "-p, --package-name-and-version <packageNameAndVersion>",
+      "name and version of the package to tag (e.g., my-package 1.0.0)"
     )
     .option(
-      "--type <type>",
-      "version bump type (patch, minor, major, prerelease)"
+      "-v, --version <newVersion>",
+      "specific version to tag (e.g., v1.0.0 or v1.0.0-beta)"
     )
     .action(async (options: TagCommandOptions) => {
       // #region Initialization
-      const { dryRun, tag, type } = options;
+      const { dryRun, newVersion, packageNameAndVersion } = options;
 
       prompts.updateSettings({
         aliases: {
@@ -77,6 +77,11 @@ function tagCommand(program: Command): Command {
           {
             // #region - @packageNameAndVersion
             packageNameAndVersion: async () => {
+              if (packageNameAndVersion) {
+                // If the user provided a package name and version, use it directly
+                return packageNameAndVersion;
+              }
+
               if (repoType.data === "single") {
                 const foundPackage =
                   await repositoryService.singleProvider.getPackage();
@@ -114,6 +119,11 @@ function tagCommand(program: Command): Command {
 
             // #region - @newVersion
             newVersion: async ({ results }) => {
+              if (newVersion) {
+                // If the user provided a new version, use it directly
+                return newVersion;
+              }
+
               const [_name, version] =
                 results.packageNameAndVersion?.split(" ") || [];
 
@@ -166,8 +176,7 @@ function tagCommand(program: Command): Command {
             task: async () => {
               const { packageNameAndVersion, newVersion } = userConfig;
 
-              const [pkgName, _currentVersion] =
-                packageNameAndVersion?.split(" ") || [];
+              const [pkgName] = packageNameAndVersion?.split(" ") || [];
 
               const tagResult = await releaseService.createTag(
                 {
