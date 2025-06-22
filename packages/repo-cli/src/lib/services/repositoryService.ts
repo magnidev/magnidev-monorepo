@@ -11,8 +11,8 @@ import type {
   RepoInfo,
   RepoTypeResult,
 } from "@/types/services/repositoryService";
-import monorepoProvider from "@lib/providers/monorepoProvider";
-import singleProvider from "@lib/providers/singleProvider";
+import monorepoProvider from "@providers/monorepoProvider";
+import singleProvider from "@providers/singleProvider";
 import GitClient from "@lib/gitClient";
 import GitHubClient from "@lib/githubClient";
 import { dirExists, readJsonFile } from "@utils/files";

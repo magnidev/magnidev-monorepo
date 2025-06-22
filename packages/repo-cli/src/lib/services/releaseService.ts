@@ -6,12 +6,12 @@
 
 import semver from "semver";
 
-import type { FunctionResult, FunctionResultPromise } from "@/types";
+import type { FunctionResultPromise } from "@/types";
 import type {
   CommitChangesResult,
   SuggestVersionsResult,
 } from "@/types/services/releaseService";
-import RepositoryClient from "@/lib/services/repositoryService";
+import RepositoryClient from "@services/repositoryService";
 
 class ReleaseService {
   private repositoryClient: RepositoryClient;
