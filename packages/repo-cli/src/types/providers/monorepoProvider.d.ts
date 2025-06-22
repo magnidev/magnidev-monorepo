@@ -10,16 +10,16 @@ import {
 /**
  * @description The configuration schema for monorepo projects.
  */
-export type monorepoConfig = z.infer<typeof monorepoConfigSchema>;
+export type MonorepoConfig = z.infer<typeof monorepoConfigSchema>;
 
 /**
  * @description The package.json schema for monorepo root projects.
  */
-export type monorepoRootPackageJson = z.infer<
+export type MonorepoRootPackageJson = z.infer<
   typeof monorepoRootPackageJsonSchema
 >;
 
 /**
  * @description The package.json schema for monorepo packages.
  */
-export type monorepoPackageJson = z.infer<typeof monorepoPackageJsonSchema>;
+export type MonorepoPackageJson = z.infer<typeof monorepoPackageJsonSchema>;

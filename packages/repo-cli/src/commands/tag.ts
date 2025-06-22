@@ -10,7 +10,6 @@ import { onCommandFlowCancel, onCommandFlowError } from "@utils/events";
 type TagCommandOptions = {
   dryRun?: boolean;
 
-  packageNameAndVersion?: string;
   newVersion?: string;
 };
 
@@ -26,16 +25,13 @@ function tagCommand(program: Command): Command {
       false
     )
     .option(
-      "-p, --package-name-and-version <packageNameAndVersion>",
-      "name and version of the package to tag (e.g., my-package 1.0.0)"
-    )
-    .option(
       "-v, --version <newVersion>",
-      "specific version to tag (e.g., v1.0.0 or v1.0.0-beta)"
+      "specific version to tag (e.g., v1.0.0 or v1.0.0-beta)",
+      (value: string) => value.trim() || undefined
     )
     .action(async (options: TagCommandOptions) => {
       // #region Initialization
-      const { dryRun, newVersion, packageNameAndVersion } = options;
+      const { dryRun, newVersion } = options;
 
       prompts.updateSettings({
         aliases: {
@@ -74,47 +70,62 @@ function tagCommand(program: Command): Command {
 
         const userConfig = await prompts.group(
           {
-            // #region - @packageNameAndVersion
-            packageNameAndVersion: async () => {
-              if (packageNameAndVersion) {
-                // If the user provided a package name and version, use it directly
-                return packageNameAndVersion;
-              }
-
+            // #region - @pkgNameAndVersion
+            pkgNameAndVersion: async () => {
               if (repoType.data === "single") {
-                const foundPackage =
-                  await repositoryService.singleProvider.getPackage();
+                const singleProvider = repositoryService.singleProvider;
+                const foundPackage = await singleProvider.getPackage();
                 if (!foundPackage.success || !foundPackage.data) {
                   onCommandFlowCancel(foundPackage.message);
                 }
 
-                return foundPackage.data!.name;
+                return `${foundPackage.data!.name}:${foundPackage.data!.version}`; // Format as "name:version"
               }
 
               if (repoType.data === "monorepo") {
-                const foundPackages =
-                  await repositoryService.monorepoProvider.getPackages();
-                if (!foundPackages.success || !foundPackages.data) {
-                  onCommandFlowCancel(foundPackages.message);
+                const monorepoProvider = repositoryService.monorepoProvider;
+                const config = await monorepoProvider.getConfig();
+                if (!config.success || !config.data) {
+                  onCommandFlowCancel(config.message);
                 }
 
-                const options = foundPackages.data!.map((pkg) => ({
-                  label: pkg.name,
-                  value: `${pkg.name} ${pkg.version}`,
-                  hint: pkg.version,
-                }));
+                const versioningStrategy =
+                  config.data!.release.versioningStrategy;
 
-                return await prompts.select({
-                  message: "Select the package to release:",
-                  options,
-                  maxItems: 1,
-                });
+                if (versioningStrategy === "independent") {
+                  const foundPackages = await monorepoProvider.getPackages();
+                  if (!foundPackages.success || !foundPackages.data) {
+                    onCommandFlowCancel(foundPackages.message);
+                  }
+
+                  const options = foundPackages.data!.map((pkg) => ({
+                    label: pkg.name,
+                    value: `${pkg.name}:${pkg.version}`, // Format as "name:version"
+                    hint: pkg.version,
+                  }));
+
+                  return await prompts.select({
+                    message: "Select the package to release:",
+                    options,
+                    maxItems: 1,
+                  });
+                } else if (versioningStrategy === "fixed") {
+                  const foundPackageJson =
+                    await monorepoProvider.getRootPackageJson();
+                  if (!foundPackageJson.success || !foundPackageJson.data) {
+                    onCommandFlowCancel(foundPackageJson.message);
+                  }
+                  const pkgName = foundPackageJson.data!.name;
+                  const pkgVersion = foundPackageJson.data!.version;
+
+                  return `${pkgName}:${pkgVersion}`; // Format as "name:version"
+                }
               }
 
               // If we reach here, it means an invalid type was selected
               onCommandFlowCancel("Invalid repository type.");
             },
-            // #endregion - @packageNameAndVersion
+            // #endregion - @pkgNameAndVersion
 
             // #region - @newVersion
             newVersion: async ({ results }) => {
@@ -124,7 +135,7 @@ function tagCommand(program: Command): Command {
               }
 
               const [_name, version] =
-                results.packageNameAndVersion?.split(" ") || [];
+                results.pkgNameAndVersion?.split(":") || [];
 
               const suggestedVersions =
                 await releaseService.suggestVersions(version);
@@ -173,14 +184,14 @@ function tagCommand(program: Command): Command {
           {
             title: "Creating tag",
             task: async () => {
-              const { packageNameAndVersion, newVersion } = userConfig;
+              const { pkgNameAndVersion, newVersion } = userConfig;
 
-              const [pkgName] = packageNameAndVersion?.split(" ") || [];
+              const [pkgName] = pkgNameAndVersion.split(":");
 
               const tagResult = await releaseService.createTag(
                 {
-                  packageName: pkgName as string,
                   version: newVersion as string,
+                  packageName: pkgName as string | undefined,
                 },
                 {
                   shouldPush: true, // TODO: Make this configurable

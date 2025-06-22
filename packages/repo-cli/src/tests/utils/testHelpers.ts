@@ -3,7 +3,7 @@ import path from "node:path";
 import { tmpdir } from "node:os";
 import { vi } from "vitest";
 
-import type { monorepoConfig } from "@/types/providers/monorepoProvider";
+import type { MonorepoConfig } from "@/types/providers/monorepoProvider";
 import type { singleConfig } from "@/types/providers/singleProvider";
 
 /**
@@ -78,7 +78,7 @@ export function createValidsingleConfig(): singleConfig {
 /**
  * Creates a valid monorepo project configuration
  */
-export function createValidMonorepoConfig(): monorepoConfig {
+export function createValidMonorepoConfig(): MonorepoConfig {
   return {
     release: {
       versioningStrategy: "independent",

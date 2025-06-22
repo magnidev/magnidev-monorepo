@@ -9,18 +9,20 @@ import fg from "fast-glob";
 
 import type { FunctionResultPromise } from "@/types";
 import type {
-  monorepoConfig,
-  monorepoPackageJson,
+  MonorepoConfig,
+  MonorepoPackageJson,
+  MonorepoRootPackageJson,
 } from "@/types/providers/monorepoProvider";
 import {
   monorepoConfigSchema,
   monorepoPackageJsonSchema,
+  monorepoRootPackageJsonSchema,
 } from "@schemas/providers/monorepoSchemas";
 import { dirExists, readJsonFile, writeJsonFile } from "@utils/files";
 import { ignorePaths } from "@utils/ignorePaths";
 
 class MonorepoProvider {
-  public config: monorepoConfig = {
+  public config: MonorepoConfig = {
     release: {
       tagFormat: "${name}@${version}",
       versioningStrategy: "independent",
@@ -36,14 +38,14 @@ class MonorepoProvider {
   /**
    * @description Parses and validates the provided configuration object for a monorepo project.
    * @param config The configuration object to parse.
-   * @returns {FunctionResultPromise<monorepoConfig | null>} A promise that resolves to a FunctionResult containing the parsed configuration or an error message.
+   * @returns {FunctionResultPromise<MonorepoConfig | null>} A promise that resolves to a FunctionResult containing the parsed configuration or an error message.
    */
   private async parseConfig(
-    config: monorepoConfig | null
-  ): FunctionResultPromise<monorepoConfig | null> {
+    config: MonorepoConfig | null
+  ): FunctionResultPromise<MonorepoConfig | null> {
     let success: boolean = false;
     let message: string = "";
-    let data: monorepoConfig | null = null;
+    let data: MonorepoConfig | null = null;
 
     try {
       if (!config) {
@@ -78,14 +80,14 @@ class MonorepoProvider {
   /**
    * @param packageJson The package.json object to parse.
    * @description Parses and validates the provided package.json object for a monorepo project.
-   * @returns {FunctionResultPromise<monorepoPackageJson | null>} A promise that resolves to a FunctionResult containing the parsed package.json or an error message.
+   * @returns {FunctionResultPromise<MonorepoPackageJson | null>} A promise that resolves to a FunctionResult containing the parsed package.json or an error message.
    */
   public async parsePackageJson(
-    packageJson: monorepoPackageJson | null
-  ): FunctionResultPromise<monorepoPackageJson | null> {
+    packageJson: MonorepoPackageJson | null
+  ): FunctionResultPromise<MonorepoPackageJson | null> {
     let success: boolean = false;
     let message: string = "";
-    let data: monorepoPackageJson | null = null;
+    let data: MonorepoPackageJson | null = null;
 
     try {
       if (!packageJson) {
@@ -116,12 +118,12 @@ class MonorepoProvider {
   // #region - @getConfig
   /**
    * @description Loads the configuration for a monorepo project repository.
-   * @returns {FunctionResultPromise<monorepoConfig | null>} A promise that resolves to a FunctionResult containing the monorepo project configuration or an error message.
+   * @returns {FunctionResultPromise<MonorepoConfig | null>} A promise that resolves to a FunctionResult containing the monorepo project configuration or an error message.
    */
-  public async getConfig(): FunctionResultPromise<monorepoConfig | null> {
+  public async getConfig(): FunctionResultPromise<MonorepoConfig | null> {
     let success: boolean = false;
     let message: string = "";
-    let data: monorepoConfig | null = null;
+    let data: MonorepoConfig | null = null;
 
     try {
       // Load the root package.json file
@@ -160,14 +162,14 @@ class MonorepoProvider {
   /**
    * @description Initializes the monorepo project configuration by merging user-provided settings with the default configuration.
    * @param userConfig The user-provided configuration for the monorepo project.
-   * @returns {FunctionResultPromise<monorepoConfig | null>} A promise that resolves to a FunctionResult containing the initialized configuration or an error message.
+   * @returns {FunctionResultPromise<MonorepoConfig | null>} A promise that resolves to a FunctionResult containing the initialized configuration or an error message.
    */
   public async init(
-    userConfig: monorepoConfig
-  ): FunctionResultPromise<monorepoConfig | null> {
+    userConfig: MonorepoConfig
+  ): FunctionResultPromise<MonorepoConfig | null> {
     let success: boolean = false;
     let message: string = "";
-    let data: monorepoConfig | null = null;
+    let data: MonorepoConfig | null = null;
 
     try {
       // Find if a configuration already exists
@@ -215,14 +217,14 @@ class MonorepoProvider {
   // #region - @getPackages
   /**
    * @description Retrieves all packages in the monorepo workspaces defined in the root package.json.
-   * @returns {FunctionResultPromise<monorepoPackageJson[] | null>} A promise that resolves to a FunctionResult containing an array of package.json objects or an error message.
+   * @returns {FunctionResultPromise<MonorepoPackageJson[] | null>} A promise that resolves to a FunctionResult containing an array of package.json objects or an error message.
    */
   public async getPackages(): FunctionResultPromise<
-    monorepoPackageJson[] | null
+    MonorepoPackageJson[] | null
   > {
     let success: boolean = false;
     let message: string = "";
-    let data: monorepoPackageJson[] | null = null;
+    let data: MonorepoPackageJson[] | null = null;
 
     try {
       // Load the root package.json file
@@ -244,7 +246,7 @@ class MonorepoProvider {
       }
 
       // Read and parse each package.json in the workspaces
-      const packages: monorepoPackageJson[] = [];
+      const packages: MonorepoPackageJson[] = [];
       /**
        * example of workpaces [ "packages/*", "libs/*", "apps/*" ]
        */
@@ -291,14 +293,14 @@ class MonorepoProvider {
   /**
    * @description Retrieves a specific package by its name from the monorepo workspaces.
    * @param packageName The name of the package to retrieve.
-   * @returns {FunctionResultPromise<monorepoPackageJson | null>} A promise that resolves to a FunctionResult containing the package.json object or an error message.
+   * @returns {FunctionResultPromise<MonorepoPackageJson | null>} A promise that resolves to a FunctionResult containing the package.json object or an error message.
    */
   public async getPackageByName(
     packageName: string
-  ): FunctionResultPromise<monorepoPackageJson | null> {
+  ): FunctionResultPromise<MonorepoPackageJson | null> {
     let success: boolean = false;
     let message: string = "";
-    let data: monorepoPackageJson | null = null;
+    let data: MonorepoPackageJson | null = null;
 
     try {
       // Load the packages
@@ -326,6 +328,50 @@ class MonorepoProvider {
     return { success, message, data };
   }
   // #endregion - @getPackageByName
+
+  // #region - @getRootPackageJson
+  /**
+   * @description Retrieves the root package.json file of the monorepo.
+   * @returns {FunctionResultPromise<MonorepoRootPackageJson | null>} A promise that resolves to a FunctionResult containing the root package.json object or an error message.
+   */
+  public async getRootPackageJson(): FunctionResultPromise<MonorepoRootPackageJson | null> {
+    let success: boolean = false;
+    let message: string = "";
+    let data: MonorepoRootPackageJson | null = null;
+
+    try {
+      // Load the root package.json file
+      const rootPackageJsonPath = path.join(process.cwd(), "package.json");
+      if (!dirExists(rootPackageJsonPath)) {
+        throw new Error("No package.json found in the current directory");
+      }
+
+      // Read the root package.json file
+      const rootPackageJsonContent = await readJsonFile(rootPackageJsonPath);
+      if (!rootPackageJsonContent) {
+        throw new Error("Failed to read package.json root file.");
+      }
+
+      // Parse and validate the package.json content
+      const configParsed = await monorepoRootPackageJsonSchema.safeParseAsync(
+        rootPackageJsonContent
+      );
+      if (!configParsed.success || !configParsed.data) {
+        throw new Error(
+          `Package.json validation failed: ${configParsed.error.message}`
+        );
+      }
+
+      success = true;
+      message = "Root package.json loaded successfully.";
+      data = configParsed.data;
+    } catch (error) {
+      success = false;
+      message = `Failed to load root package.json: ${error instanceof Error ? error.message : String(error)}`;
+    }
+
+    return { success, message, data };
+  }
 }
 
 export default MonorepoProvider;

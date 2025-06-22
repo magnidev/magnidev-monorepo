@@ -190,7 +190,7 @@ class ReleaseService {
    * @returns A promise that resolves to a FunctionResult indicating success or failure.
    */
   public async createTag(
-    data: { packageName: string; version: string },
+    data: { packageName?: string; version: string },
     options: {
       shouldPush?: boolean;
       dryRun?: boolean;
@@ -234,6 +234,12 @@ class ReleaseService {
             version
           );
         } else {
+          if (!packageName) {
+            throw new Error(
+              "Package name is required for independent versioning"
+            );
+          }
+
           tagName = config.data.release.tagFormat
             .replace("${name}", packageName)
             .replace("${version}", version);

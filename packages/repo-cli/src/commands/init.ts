@@ -3,7 +3,7 @@ import prompts from "@clack/prompts";
 import colors from "picocolors";
 import z from "zod/v4";
 
-import type { monorepoConfig } from "@/types/providers/monorepoProvider";
+import type { MonorepoConfig } from "@/types/providers/monorepoProvider";
 import type { singleConfig } from "@/types/providers/singleProvider";
 import RepositoryClient from "@/lib/services/repositoryService";
 import { intro, outro } from "@utils/intro";
@@ -98,7 +98,7 @@ function initCommand(program: Command): Command {
                 message: "Enter the pre-release identifier:",
                 placeholder: "e.g., canary, beta, alpha",
                 initialValue: "canary",
-              })) as monorepoConfig["release"]["preReleaseIdentifier"];
+              })) as MonorepoConfig["release"]["preReleaseIdentifier"];
 
               if (prompts.isCancel(preReleaseIdentifier)) {
                 onCommandFlowCancel();
@@ -125,7 +125,7 @@ function initCommand(program: Command): Command {
                   placeholder: "e.g., v${version}",
                   initialValue: "v${version}",
                   validate: validateTagFormat,
-                })) as monorepoConfig["release"]["tagFormat"];
+                })) as MonorepoConfig["release"]["tagFormat"];
 
                 if (prompts.isCancel(tagFormat)) onCommandFlowCancel();
 
@@ -145,7 +145,7 @@ function initCommand(program: Command): Command {
                   ],
                   initialValue: "independent",
                   maxItems: 1,
-                })) as monorepoConfig["release"]["versioningStrategy"];
+                })) as MonorepoConfig["release"]["versioningStrategy"];
 
                 if (prompts.isCancel(versioningStrategy)) onCommandFlowCancel();
 
@@ -153,7 +153,7 @@ function initCommand(program: Command): Command {
                   tagFormat,
                   versioningStrategy,
                   preReleaseIdentifier,
-                } satisfies monorepoConfig["release"];
+                } satisfies MonorepoConfig["release"];
               }
               if (results.repoType === "single") {
                 return {
@@ -286,7 +286,7 @@ function initCommand(program: Command): Command {
               const client = repositoryClient.monorepoProvider;
 
               const { success, message } = await client.init(
-                userConfig as monorepoConfig
+                userConfig as MonorepoConfig
               );
               if (!success) onCommandFlowCancel(message);
               return message;
