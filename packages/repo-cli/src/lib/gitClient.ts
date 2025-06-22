@@ -13,7 +13,7 @@ import simpleGit, {
 import colors from "picocolors";
 
 import type { FunctionResultPromise } from "@/types";
-import type { Commit } from "@/types/github";
+import type { Commit } from "@/types/gitClient";
 
 class GitClient {
   private client: SimpleGit;

@@ -7,7 +7,10 @@
 import path from "node:path";
 
 import type { FunctionResultPromise } from "@/types";
-import type { singleConfig, singlePackageJson } from "@/types/providers/single";
+import type {
+  singleConfig,
+  singlePackageJson,
+} from "@/types/providers/singleProvider";
 import {
   singleConfigSchema,
   singlePackageJsonSchema,

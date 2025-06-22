@@ -1,13 +1,16 @@
 /**
- * @name Repository
- * @file src/lib/repository.ts
+ * @name RepositoryService
+ * @file src/lib/services/repositoryService.ts
  * @description Class to manage repository information and configuration
  */
 
 import path from "node:path";
 
 import type { FunctionResultPromise } from "@/types";
-import type { RepoInfo } from "@/types/repository";
+import type {
+  RepoInfo,
+  RepoTypeResult,
+} from "@/types/services/repositoryService";
 import monorepoProvider from "@lib/providers/monorepoProvider";
 import singleProvider from "@lib/providers/singleProvider";
 import GitClient from "@lib/gitClient";
@@ -32,14 +35,12 @@ class Repository {
   // #region - @getRepoType
   /**
    * @description Get the type of repository (single or monorepo) based on the presence of a workspaces field in package.json.
-   * @returns {FunctionResultPromise<"single" | "monorepo" | null>} The type of repository or null if not determined.
+   * @returns {FunctionResultPromise<RepoTypeResult>} The type of repository or null if not determined.
    */
-  public async getRepoType(): FunctionResultPromise<
-    "single" | "monorepo" | null
-  > {
+  public async getRepoType(): FunctionResultPromise<RepoTypeResult> {
     let success: boolean = false;
     let message: string = "";
-    let data: "single" | "monorepo" | null = null;
+    let data: RepoTypeResult = null;
 
     try {
       // Load the root package.json file
@@ -84,6 +85,39 @@ class Repository {
     };
   }
   // #endregion - @getRepoType
+
+  // #region - @checkIsGitRepo
+  /**
+   * @description Checks if the current directory is a git repository.
+   * @returns {FunctionResultPromise} A promise that resolves to an object indicating success or failure.
+   */
+  public async checkIsGitRepo(): FunctionResultPromise {
+    let success: boolean = false;
+    let message: string = "";
+
+    try {
+      const isRepo = await this.gitClient.checkIsRepo();
+      if (!isRepo) {
+        throw new Error("Current directory is not a git repository");
+      }
+
+      success = true;
+      message = "Current directory is a git repository";
+    } catch (error: any) {
+      success = false;
+      message = "Failed to check if current directory is a git repository";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
+    }
+
+    return {
+      success,
+      message,
+    };
+  }
+  // #endregion - @checkIsGitRepo
 
   // #region - @getRepoInfo
   /**

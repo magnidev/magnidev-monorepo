@@ -7,8 +7,11 @@
 import semver from "semver";
 
 import type { FunctionResult, FunctionResultPromise } from "@/types";
-import type { SuggestVersionsResult } from "@/types/services/releaseService";
-import RepositoryClient from "@lib/repositoryClient";
+import type {
+  CommitChangesResult,
+  SuggestVersionsResult,
+} from "@/types/services/releaseService";
+import RepositoryClient from "@/lib/services/repositoryService";
 
 class ReleaseService {
   private repositoryClient: RepositoryClient;
@@ -35,10 +38,10 @@ class ReleaseService {
    */
   public async suggestVersions(
     currentVersion: string
-  ): FunctionResultPromise<SuggestVersionsResult | null> {
+  ): FunctionResultPromise<SuggestVersionsResult> {
     let success: boolean = false;
     let message: string = "";
-    let data: SuggestVersionsResult | null = null;
+    let data: SuggestVersionsResult = null;
 
     let versionIdentifier: string | undefined = undefined;
 
@@ -88,6 +91,95 @@ class ReleaseService {
     };
   }
   // #endregion - @suggestVersions
+
+  // #region - @commitChanges
+  /**
+   * @description Commits changes to the repository.
+   * @param data The data containing changes, commit type, message, body, and scope.
+   * @param options Options for committing, including whether to push and if it's a dry run
+   */
+  public async commitChanges(
+    data: {
+      changes: string[];
+      commitType: string;
+      commitMessage: string;
+      commitBody?: string;
+      commitScope?: string;
+    },
+    options: {
+      shouldPush?: boolean;
+      dryRun?: boolean;
+    }
+  ): FunctionResultPromise<CommitChangesResult> {
+    let success: boolean = false;
+    let message: string = "";
+    let dataResult: CommitChangesResult | null = null;
+
+    const { changes, commitType, commitMessage, commitBody, commitScope } =
+      data;
+    const { shouldPush, dryRun } = options;
+
+    try {
+      // Prepare the files to commit
+      const filesToCommit = changes.map((change: string) => {
+        const [path, workingDir] = change.split(":");
+        return { path, workingDir }; // Assuming change is in the format "path:workingDir"
+      });
+
+      if (dryRun) {
+        // If dry run, just return the tag name without creating it
+        return {
+          success: true,
+          message: "Dry run: Commit changes skipped",
+          data: { changes: changes },
+        };
+      }
+
+      // Add changes to the git staging area
+      const addResult = await this.gitClient.addFiles(
+        filesToCommit.map((file) => file.path)
+      );
+      if (!addResult.success) {
+        throw new Error(addResult.message);
+      }
+
+      // Perform the commit
+      const commitResult = await this.gitClient.commitChanges({
+        type: commitType,
+        message: commitMessage,
+        body: commitBody,
+        scope: commitScope,
+      });
+      if (!commitResult.success) {
+        throw new Error(commitResult.message);
+      }
+
+      // If the user opted to push, do it now
+      if (shouldPush) {
+        const pushResult = await this.gitClient.pushChanges();
+        if (!pushResult.success) {
+          throw new Error(pushResult.message);
+        }
+      }
+
+      success = true;
+      message = "Changes committed successfully";
+      dataResult = { changes };
+    } catch (error) {
+      success = false;
+      message = "Failed to create git tag";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
+    }
+
+    return {
+      success,
+      message,
+    };
+  }
+  // #endregion - @commitChanges
 
   // #region - @createTag
   /**

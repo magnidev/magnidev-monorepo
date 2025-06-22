@@ -11,7 +11,7 @@ import type { FunctionResultPromise } from "@/types";
 import type {
   monorepoConfig,
   monorepoPackageJson,
-} from "@/types/providers/monorepo";
+} from "@/types/providers/monorepoProvider";
 import {
   monorepoConfigSchema,
   monorepoPackageJsonSchema,

@@ -2,9 +2,9 @@ import prompts from "@clack/prompts";
 import { Command } from "commander";
 import colors from "picocolors";
 
-import type { RepoInfo } from "@/types/repository";
-import type { monorepoPackageJson } from "@/types/providers/monorepo";
-import RepositoryClient from "@lib/repositoryClient";
+import type { RepoInfo } from "@/types/services/repositoryService";
+import type { monorepoPackageJson } from "@/types/providers/monorepoProvider";
+import RepositoryClient from "@/lib/services/repositoryService";
 import GitClient from "@lib/gitClient";
 import { intro } from "@utils/intro";
 import { onCommandFlowCancel, onCommandFlowError } from "@utils/events";

@@ -3,8 +3,8 @@ import path from "node:path";
 import { tmpdir } from "node:os";
 import { vi } from "vitest";
 
-import type { monorepoConfig } from "@/types/providers/monorepo";
-import type { singleConfig } from "@/types/providers/single";
+import type { monorepoConfig } from "@/types/providers/monorepoProvider";
+import type { singleConfig } from "@/types/providers/singleProvider";
 
 /**
  * Creates a temporary directory for testing

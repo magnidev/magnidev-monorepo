@@ -1,8 +1,18 @@
 /**
+ * @description Type representing the repository type.
+ */
+export type RepoType = "single" | "monorepo";
+
+/**
+ * @description Type representing the result of a repository type check.
+ */
+export type RepoTypeResult = RepoType | null;
+
+/**
  * @description Type representing the repository information.
  */
 export type RepoInfo = {
-  repoType: "single" | "monorepo";
+  repoType: RepoType;
   currentBranch: string;
   remoteUrl: string;
   owner: string;

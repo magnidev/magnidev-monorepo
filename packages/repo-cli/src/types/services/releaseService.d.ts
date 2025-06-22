@@ -6,4 +6,9 @@ export type SuggestVersionsResult = {
   minor: string | null;
   major: string | null;
   prerelease: string | null;
-};
+} | null;
+
+/**
+ * @description Type representing the result of committing changes to a repository.
+ */
+export type CommitChangesResult = { changes: string[] } | null;

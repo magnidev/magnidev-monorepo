@@ -2,8 +2,8 @@ import { Command } from "commander";
 import prompts from "@clack/prompts";
 import colors from "picocolors";
 
-import type { VersionType } from "@/types/repository";
-import RepositoryClient from "@lib/repositoryClient";
+import type { VersionType } from "@/types/services/repositoryService";
+import RepositoryService from "@services/repositoryService";
 import ReleaseService from "@services/releaseService";
 import { intro, outro } from "@utils/intro";
 import { onCommandFlowCancel, onCommandFlowError } from "@utils/events";
@@ -56,9 +56,9 @@ function tagCommand(program: Command): Command {
 
       try {
         // #region - Initialize Clients
-        const repositoryClient = new RepositoryClient();
-        const gitClient = repositoryClient.gitClient;
-        const releaseService = new ReleaseService(repositoryClient);
+        const repositoryService = new RepositoryService();
+        const gitClient = repositoryService.gitClient;
+        const releaseService = new ReleaseService(repositoryService);
 
         // Check if the current directory is a Git repository
         const isGitRepo = await gitClient.checkIsRepo();
@@ -67,7 +67,7 @@ function tagCommand(program: Command): Command {
         }
 
         // Check if the repository is a monorepo or single project
-        const repoType = await repositoryClient.getRepoType();
+        const repoType = await repositoryService.getRepoType();
         if (!repoType.success || !repoType.data) {
           onCommandFlowCancel(repoType.message);
         }
@@ -79,7 +79,7 @@ function tagCommand(program: Command): Command {
             packageNameAndVersion: async () => {
               if (repoType.data === "single") {
                 const foundPackage =
-                  await repositoryClient.singleProvider.getPackage();
+                  await repositoryService.singleProvider.getPackage();
                 if (!foundPackage.success || !foundPackage.data) {
                   onCommandFlowCancel(foundPackage.message);
                 }
@@ -89,7 +89,7 @@ function tagCommand(program: Command): Command {
 
               if (repoType.data === "monorepo") {
                 const foundPackages =
-                  await repositoryClient.monorepoProvider.getPackages();
+                  await repositoryService.monorepoProvider.getPackages();
                 if (!foundPackages.success || !foundPackages.data) {
                   onCommandFlowCancel(foundPackages.message);
                 }

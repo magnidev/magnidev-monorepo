@@ -2,11 +2,13 @@ import { Command } from "commander";
 import prompts from "@clack/prompts";
 import colors from "picocolors";
 
-import RepositoryClient from "@lib/repositoryClient";
+import RepositoryService from "@services/repositoryService";
+import ReleaseService from "@services/releaseService";
 import { intro, outro } from "@utils/intro";
 import { onCommandFlowCancel, onCommandFlowError } from "@utils/events";
 
 type CommitCommandOptions = {
+  dryRun?: boolean;
   scope?: string;
   message?: string;
   body?: string;
@@ -16,12 +18,23 @@ function commitCommand(program: Command): Command {
   return program
     .command("commit")
     .description("commit changes to a Git repository")
-    .option("-s, --scope <scope>", "commit scope")
-    .option("-m, --message <message>", "commit message")
-    .option("-b, --body <body>", "commit body")
+    .option(
+      "-d, --dry-run",
+      "simulate the release process without making any changes",
+      false
+    )
+    .option(
+      "-s, --scope <scope>",
+      "commit scope (e.g., feat, fix, chore, etc.)"
+    )
+    .option(
+      "-m, --message <message>",
+      "commit message (should be short and descriptive)"
+    )
+    .option("-b, --body <body>", "commit body (optional) (should be detailed)")
     .action(async (options: CommitCommandOptions) => {
       // #region - Initialization
-      const { scope, message, body } = options;
+      const { dryRun, scope, message, body } = options;
 
       prompts.updateSettings({
         aliases: {
@@ -34,22 +47,27 @@ function commitCommand(program: Command): Command {
       });
 
       prompts.intro(colors.white(intro));
+
+      if (dryRun) {
+        prompts.log.info(`Dry run mode ${colors.blue("enabled")}.`);
+      }
       // #endregion - Initialization
 
       try {
         // #region - Initialize Clients
-        const repositoryClient = new RepositoryClient();
-        const gitClient = repositoryClient.gitClient;
+        const repositoryService = new RepositoryService();
+        const gitClient = repositoryService.gitClient;
+        const releaseService = new ReleaseService(repositoryService);
 
         // Check if the current directory is a Git repository
-        const isGitRepo = await gitClient.checkIsRepo();
+        const isGitRepo = await repositoryService.checkIsGitRepo();
         if (!isGitRepo.success) {
           onCommandFlowCancel(isGitRepo.message);
         }
 
         // Check if there are any changes to commit
         const hasChanges = await gitClient.checkHasChanges();
-        if (!hasChanges.success || !hasChanges.data) {
+        if (!hasChanges.success) {
           onCommandFlowCancel("No changes to commit.");
         }
 
@@ -60,20 +78,19 @@ function commitCommand(program: Command): Command {
         }
 
         // Check if the repository is a monorepo or single project
-        const repoType = await repositoryClient.getRepoType();
+        const repoType = await repositoryService.getRepoType();
         if (!repoType.success || !repoType.data) {
           onCommandFlowCancel(repoType.message);
         }
         // #endregion - Initialize Clients
 
-        // #region - Command Flow
         const userConfig = await prompts.group(
           {
             // #region - @packageName
             packageName: async () => {
               if (repoType.data === "single") {
                 const foundPackage =
-                  await repositoryClient.singleProvider.getPackage();
+                  await repositoryService.singleProvider.getPackage();
                 if (!foundPackage.success || !foundPackage.data) {
                   onCommandFlowCancel(foundPackage.message);
                 }
@@ -83,7 +100,7 @@ function commitCommand(program: Command): Command {
 
               if (repoType.data === "monorepo") {
                 const foundPackages =
-                  await repositoryClient.monorepoProvider.getPackages();
+                  await repositoryService.monorepoProvider.getPackages();
                 if (!foundPackages.success || !foundPackages.data) {
                   onCommandFlowCancel(foundPackages.message);
                 }
@@ -105,6 +122,7 @@ function commitCommand(program: Command): Command {
               onCommandFlowCancel("Invalid repository type.");
             },
             // #endregion - @packageName
+
             // #region - @commitType
             commitType: async () =>
               await prompts.select({
@@ -165,6 +183,7 @@ function commitCommand(program: Command): Command {
                 maxItems: 1,
               }),
             // #endregion - @commitType
+
             // #region - @commitScope
             commitScope: async ({ results }) => {
               if (repoType.data === "single") {
@@ -196,6 +215,7 @@ function commitCommand(program: Command): Command {
               });
             },
             // #endregion - @commitMessage
+
             // #region - @commitBody
             commitBody: async () => {
               return await prompts.text({
@@ -210,6 +230,7 @@ function commitCommand(program: Command): Command {
               });
             },
             // #endregion - @commitBody
+
             // #region - @changes
             changes: async () => {
               const getLabel = (path: string, workingDir: string) => {
@@ -234,6 +255,7 @@ function commitCommand(program: Command): Command {
               });
             },
             // #endregion - @changes
+
             // #region - @shouldPush
             shouldPush: async () =>
               await prompts.confirm({
@@ -245,7 +267,6 @@ function commitCommand(program: Command): Command {
             onCancel: () => onCommandFlowCancel("Commit cancelled."),
           }
         );
-        // #endregion - Command Flow
 
         // #region - Business Logic
         const tasks = await prompts.tasks([
@@ -253,49 +274,33 @@ function commitCommand(program: Command): Command {
             title: "Constructing commit message",
             task: async () => {
               const {
-                packageName,
                 commitType,
                 commitScope,
                 commitMessage,
                 commitBody,
                 changes,
+                shouldPush,
               } = userConfig;
 
-              // Prepare the files to commit
-              const filesToCommit = changes.map((change: string) => {
-                const [path, workingDir] = change.split(":");
-                return { path, workingDir };
-              });
-
-              // Add changes to the git staging area
-              const addResult = await gitClient.addFiles(
-                filesToCommit.map((file) => file.path)
-              );
-              if (!addResult.success) {
-                throw new Error(addResult.message);
-              }
-
-              // Perform the commit
-              const commitResult = await gitClient.commitChanges({
-                type: commitType,
-                message: commitMessage,
-                body: commitBody,
-                scope: commitScope as string,
-              });
-              if (!commitResult.success) {
-                throw new Error(commitResult.message);
-              }
-
-              // If the user opted to push, do it now
-              if (userConfig.shouldPush) {
-                const pushResult = await gitClient.pushChanges(); // Push changes to the remote repository
-                if (!pushResult.success) {
-                  throw new Error(pushResult.message);
+              const commitResult = await releaseService.commitChanges(
+                {
+                  changes: changes as string[],
+                  commitType: commitType as string,
+                  commitMessage: commitMessage as string,
+                  commitBody: commitBody as string,
+                  commitScope: commitScope as string,
+                },
+                {
+                  shouldPush,
+                  dryRun,
                 }
+              );
+              if (!commitResult.success || !commitResult.data) {
+                onCommandFlowCancel(commitResult.message);
               }
 
               // Return a success message
-              return `Committed ${filesToCommit.length} file(s) successfully.${userConfig.shouldPush ? " Changes pushed to remote." : colors.green(" Ready to push 🚀")}`;
+              return `Committed ${commitResult.data?.changes.length} file(s) successfully.${userConfig.shouldPush ? " Changes pushed to remote." : colors.green(" Ready to push 🚀")}`;
             },
           },
         ]);

@@ -3,9 +3,9 @@ import prompts from "@clack/prompts";
 import colors from "picocolors";
 import z from "zod/v4";
 
-import type { monorepoConfig } from "@/types/providers/monorepo";
-import type { singleConfig } from "@/types/providers/single";
-import RepositoryClient from "@lib/repositoryClient";
+import type { monorepoConfig } from "@/types/providers/monorepoProvider";
+import type { singleConfig } from "@/types/providers/singleProvider";
+import RepositoryClient from "@/lib/services/repositoryService";
 import { intro, outro } from "@utils/intro";
 import { onCommandFlowCancel, onCommandFlowError } from "@utils/events";
 import {
