@@ -8,8 +8,8 @@ import path from "node:path";
 
 import type { FunctionResultPromise } from "@/types";
 import type {
-  singleConfig,
-  singlePackageJson,
+  SingleConfig,
+  SinglePackageJson,
 } from "@/types/providers/singleProvider";
 import {
   singleConfigSchema,
@@ -18,7 +18,7 @@ import {
 import { dirExists, readJsonFile, writeJsonFile } from "@utils/files";
 
 class singleProvider {
-  config: singleConfig = {
+  config: SingleConfig = {
     release: {
       tagFormat: "v${version}",
       preReleaseIdentifier: "canary",
@@ -39,11 +39,11 @@ class singleProvider {
    * @returns {FunctionResultPromise} A promise that resolves to a FunctionResult containing the parsed configuration or an error message.
    */
   private async parseConfig(
-    config: singleConfig | null
-  ): FunctionResultPromise<singleConfig | null> {
+    config: SingleConfig | null
+  ): FunctionResultPromise<SingleConfig | null> {
     let success: boolean = false;
     let message: string = "";
-    let data: singleConfig | null = null;
+    let data: SingleConfig | null = null;
 
     try {
       if (!config) {
@@ -78,14 +78,14 @@ class singleProvider {
   /**
    * @description Parses and validates the provided package.json object for a single project.
    * @param packageJson The package.json object to parse.
-   * @returns {FunctionResultPromise<singlePackageJson | null>} A promise that resolves to a FunctionResult containing the parsed package.json or an error message.
+   * @returns {FunctionResultPromise<SinglePackageJson | null>} A promise that resolves to a FunctionResult containing the parsed package.json or an error message.
    */
   public async parsePackageJson(
-    packageJson: singlePackageJson | null
-  ): FunctionResultPromise<singlePackageJson | null> {
+    packageJson: SinglePackageJson | null
+  ): FunctionResultPromise<SinglePackageJson | null> {
     let success: boolean = false;
     let message: string = "";
-    let data: singlePackageJson | null = null;
+    let data: SinglePackageJson | null = null;
 
     try {
       if (!packageJson) {
@@ -116,12 +116,12 @@ class singleProvider {
   // #region - @getConfig
   /**
    * @description Loads the configuration for a single project repository.
-   * @returns {FunctionResultPromise<singleConfig | null>} A promise that resolves to a FunctionResult containing the configuration or an error message.
+   * @returns {FunctionResultPromise<SingleConfig | null>} A promise that resolves to a FunctionResult containing the configuration or an error message.
    */
-  public async getConfig(): FunctionResultPromise<singleConfig | null> {
+  public async getConfig(): FunctionResultPromise<SingleConfig | null> {
     let success: boolean = false;
     let message: string = "";
-    let data: singleConfig | null = null;
+    let data: SingleConfig | null = null;
 
     try {
       // Load the root package.json file
@@ -160,14 +160,14 @@ class singleProvider {
   /**
    * @description Initializes the repository configuration for a single project or monorepo.
    * @param userConfig The user-defined configuration for the repository.
-   * @returns {FunctionResultPromise<singleConfig | null>} A promise that resolves to a FunctionResult containing the initialized configuration or an error message.
+   * @returns {FunctionResultPromise<SingleConfig | null>} A promise that resolves to a FunctionResult containing the initialized configuration or an error message.
    */
   public async init(
-    userConfig: singleConfig
-  ): FunctionResultPromise<singleConfig | null> {
+    userConfig: SingleConfig
+  ): FunctionResultPromise<SingleConfig | null> {
     let success: boolean = false;
     let message: string = "";
-    let data: singleConfig | null = null;
+    let data: SingleConfig | null = null;
 
     try {
       // Find if a configuration already exists
@@ -215,12 +215,12 @@ class singleProvider {
   // #region - @getPackage
   /**
    * @description Retrieves the package.json data for a single project repository.
-   * @returns {FunctionResultPromise<singlePackageJson | null>} A promise that resolves to a FunctionResult containing the package.json data or an error message.
+   * @returns {FunctionResultPromise<SinglePackageJson | null>} A promise that resolves to a FunctionResult containing the package.json data or an error message.
    */
-  public async getPackage(): FunctionResultPromise<singlePackageJson | null> {
+  public async getPackage(): FunctionResultPromise<SinglePackageJson | null> {
     let success: boolean = false;
     let message: string = "";
-    let data: singlePackageJson | null = null;
+    let data: SinglePackageJson | null = null;
 
     try {
       // Load the root package.json file

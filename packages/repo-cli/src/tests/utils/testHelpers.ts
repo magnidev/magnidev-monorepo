@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { vi } from "vitest";
 
 import type { MonorepoConfig } from "@/types/providers/monorepoProvider";
-import type { singleConfig } from "@/types/providers/singleProvider";
+import type { SingleConfig } from "@/types/providers/singleProvider";
 
 /**
  * Creates a temporary directory for testing
@@ -61,7 +61,7 @@ export function readPackageJson(dir: string): any {
 /**
  * Creates a valid single project configuration
  */
-export function createValidsingleConfig(): singleConfig {
+export function createValidsingleConfig(): SingleConfig {
   return {
     publishConfig: {
       registry: "https://registry.npmjs.org/",

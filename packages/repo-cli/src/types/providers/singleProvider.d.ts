@@ -8,9 +8,9 @@ import {
 /**
  * @description The configuration schema for single projects.
  */
-export type singleConfig = z.infer<typeof singleConfigSchema>;
+export type SingleConfig = z.infer<typeof singleConfigSchema>;
 
 /**
  * @description The package.json schema for single projects.
  */
-export type singlePackageJson = z.infer<typeof singlePackageJsonSchema>;
+export type SinglePackageJson = z.infer<typeof singlePackageJsonSchema>;

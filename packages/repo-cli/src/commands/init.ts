@@ -4,7 +4,7 @@ import colors from "picocolors";
 import z from "zod/v4";
 
 import type { MonorepoConfig } from "@/types/providers/monorepoProvider";
-import type { singleConfig } from "@/types/providers/singleProvider";
+import type { SingleConfig } from "@/types/providers/singleProvider";
 import RepositoryClient from "@/lib/services/repositoryService";
 import { intro, outro } from "@utils/intro";
 import { onCommandFlowCancel, onCommandFlowError } from "@utils/events";
@@ -159,7 +159,7 @@ function initCommand(program: Command): Command {
                 return {
                   tagFormat: "v${version}",
                   preReleaseIdentifier,
-                } satisfies singleConfig["release"];
+                } satisfies SingleConfig["release"];
               }
 
               // If we reach here, it means an invalid type was selected
@@ -246,7 +246,7 @@ function initCommand(program: Command): Command {
                   ],
                   initialValue: "public",
                   maxItems: 1,
-                })) as singleConfig["publishConfig"]["access"];
+                })) as SingleConfig["publishConfig"]["access"];
 
                 if (prompts.isCancel(access)) onCommandFlowCancel();
 
@@ -255,7 +255,7 @@ function initCommand(program: Command): Command {
                   placeholder: "e.g., https://registry.npmjs.org/",
                   initialValue: "https://registry.npmjs.org/",
                   validate: validateRegistry,
-                })) as singleConfig["publishConfig"]["registry"];
+                })) as SingleConfig["publishConfig"]["registry"];
 
                 if (prompts.isCancel(registry)) onCommandFlowCancel();
               }
@@ -299,7 +299,7 @@ function initCommand(program: Command): Command {
               const client = repositoryClient.singleProvider;
 
               const { success, message } = await client.init(
-                userConfig as singleConfig
+                userConfig as SingleConfig
               );
               if (!success) onCommandFlowCancel(message);
               return message;
