@@ -500,6 +500,75 @@ class GitClient {
   }
   // #endregion - @pushTags
 
+  // #region - @getCommitsSinceLastTag
+  /**
+   * @description Retrieves commits since the latest tag or since a specific tag.
+   * @param tagName Optional tag name to start from. If not provided, uses the latest tag.
+   * @returns {FunctionResultPromise<Commit[] | null>} A promise that resolves to commits since the tag.
+   */
+  public async getCommitsSinceLastTag(
+    tagName?: string
+  ): FunctionResultPromise<Commit[] | null> {
+    let success: boolean = false;
+    let message: string = "";
+    let data: Commit[] | null = null;
+
+    try {
+      let fromTag: string;
+
+      if (tagName) {
+        // Verify if the provided tag exists
+        const tags = await this.client.tags();
+        if (!tags.all.includes(tagName)) {
+          throw new Error(`Tag '${tagName}' does not exist`);
+        }
+        fromTag = tagName;
+      } else {
+        // Get the latest tag
+        const tags = await this.client.tags();
+        if (!tags.latest) {
+          throw new Error("No tags found in repository");
+        }
+        fromTag = tags.latest;
+      }
+
+      // Get commits since the tag
+      const log = await this.client.log({
+        from: fromTag,
+        to: "HEAD",
+      });
+
+      if (!log.all || log.all.length === 0) {
+        success = true;
+        message = `No commits found since tag '${fromTag}'`;
+        data = [];
+      } else {
+        success = true;
+        message = `Found ${log.all.length} commit(s) since tag '${fromTag}'`;
+        data = log.all.map((commit) => ({
+          ...commit,
+          message: commit.message,
+        }));
+      }
+    } catch (error) {
+      success = false;
+      message = tagName
+        ? `Failed to retrieve commits since tag '${tagName}'`
+        : "Failed to retrieve commits since latest tag";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
+    }
+
+    return {
+      success,
+      message,
+      data,
+    };
+  }
+  // #endregion - @getCommitsSinceLastTag
+
   // #region - @getChangeInfo
   /**
    * @description Returns the console color and label for a given change type.
