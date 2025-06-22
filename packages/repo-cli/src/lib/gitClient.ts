@@ -238,7 +238,6 @@ class GitClient {
     };
   }
   // #endregion - @getOwnerAndRepo
-
   // #region - @checkHasChanges
   /**
    * @description Checks if there are any changes in the git repository.
@@ -255,8 +254,7 @@ class GitClient {
         throw new Error(changes.message);
       }
 
-      const hasChanges: boolean =
-        changes.data.files.length === 0 || changes.data.not_added.length === 0;
+      const hasChanges: boolean = changes.data.files.length > 0;
 
       if (!hasChanges) {
         throw new Error("There are no changes in the repository");
