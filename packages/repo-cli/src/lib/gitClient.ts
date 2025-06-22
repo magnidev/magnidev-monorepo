@@ -405,6 +405,35 @@ class GitClient {
   }
   // #endregion - @commitChanges
 
+  // #region - @resetChanges
+  /**
+   * @description Resets the changes in the git repository, reverting to the last commit.
+   * @returns {FunctionResultPromise} A promise that resolves to a FunctionResultPromise indicating success or failure.
+   */
+  public async resetChanges(): FunctionResultPromise {
+    let success: boolean = false;
+    let message: string = "";
+
+    try {
+      await this.client.reset();
+      success = true;
+      message = "Changes reset successfully";
+    } catch (error) {
+      success = false;
+      message = "Failed to reset changes";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
+    }
+
+    return {
+      success,
+      message,
+    };
+  }
+  // #endregion - @resetChanges
+
   // #region - @pushChanges
   /**
    * @description Pushes the committed changes to the remote repository.
@@ -500,51 +529,78 @@ class GitClient {
   }
   // #endregion - @pushTags
 
-  // #region - @getCommitsSinceLastTag
+  // #region - @getTags
+  /**
+   * @description Retrieves all tags from the repository.
+   * @returns {FunctionResultPromise<string[]>} A promise that resolves to an array of tag names.
+   */
+  public async getTags(): FunctionResultPromise<string[] | null> {
+    let success: boolean = false;
+    let message: string = "";
+    let data: string[] | null = null;
+
+    try {
+      const tags = await this.client.tags();
+      if (!tags.all || tags.all.length === 0) {
+        throw new Error("No tags found in repository");
+      }
+
+      success = true;
+      message = "Tags retrieved successfully";
+      data = tags.all;
+    } catch (error) {
+      success = false;
+      message = "Failed to retrieve tags";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
+    }
+
+    return {
+      success,
+      message,
+      data,
+    };
+  }
+  // #endregion - @getTags
+
+  // #region - @getCommitsSinceTag
   /**
    * @description Retrieves commits since the latest tag or since a specific tag.
    * @param tagName Optional tag name to start from. If not provided, uses the latest tag.
    * @returns {FunctionResultPromise<Commit[] | null>} A promise that resolves to commits since the tag.
    */
-  public async getCommitsSinceLastTag(
-    tagName?: string
+  public async getCommitsSinceTag(
+    tagName: string
   ): FunctionResultPromise<Commit[] | null> {
     let success: boolean = false;
     let message: string = "";
     let data: Commit[] | null = null;
 
     try {
-      let fromTag: string;
-
-      if (tagName) {
-        // Verify if the provided tag exists
-        const tags = await this.client.tags();
-        if (!tags.all.includes(tagName)) {
-          throw new Error(`Tag '${tagName}' does not exist`);
-        }
-        fromTag = tagName;
-      } else {
-        // Get the latest tag
-        const tags = await this.client.tags();
-        if (!tags.latest) {
-          throw new Error("No tags found in repository");
-        }
-        fromTag = tags.latest;
+      // Verify if the provided tag exists
+      const tags = await this.getTags();
+      if (!tags.success || !tags.data) {
+        throw new Error(tags.message);
+      }
+      if (!tags.data.includes(tagName)) {
+        throw new Error(`Tag '${tagName}' does not exist`);
       }
 
       // Get commits since the tag
       const log = await this.client.log({
-        from: fromTag,
+        from: tagName,
         to: "HEAD",
       });
 
       if (!log.all || log.all.length === 0) {
         success = true;
-        message = `No commits found since tag '${fromTag}'`;
+        message = `No commits found since tag '${tagName}'`;
         data = [];
       } else {
         success = true;
-        message = `Found ${log.all.length} commit(s) since tag '${fromTag}'`;
+        message = `Found ${log.all.length} commit(s) since tag '${tagName}'`;
         data = log.all.map((commit) => ({
           ...commit,
           message: commit.message,
@@ -567,7 +623,7 @@ class GitClient {
       data,
     };
   }
-  // #endregion - @getCommitsSinceLastTag
+  // #endregion - @getCommitsSinceTag
 
   // #region - @getChangeInfo
   /**
