@@ -16,7 +16,7 @@ import singleProvider from "@providers/singleProvider";
 import GitClient from "@lib/gitClient";
 import { dirExists, readJsonFile } from "@utils/files";
 
-class Repository {
+class RepositoryService {
   public gitClient: GitClient;
 
   public monorepoProvider: monorepoProvider;
@@ -191,4 +191,4 @@ class Repository {
   // #endregion - @getRepoInfo
 }
 
-export default Repository;
+export default RepositoryService;
