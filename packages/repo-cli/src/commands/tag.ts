@@ -57,11 +57,10 @@ function tagCommand(program: Command): Command {
       try {
         // #region - Initialize Clients
         const repositoryService = new RepositoryService();
-        const gitClient = repositoryService.gitClient;
         const releaseService = new ReleaseService(repositoryService);
 
         // Check if the current directory is a Git repository
-        const isGitRepo = await gitClient.checkIsRepo();
+        const isGitRepo = await repositoryService.checkIsGitRepo();
         if (!isGitRepo.success) {
           onCommandFlowCancel(isGitRepo.message);
         }

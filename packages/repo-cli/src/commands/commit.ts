@@ -9,6 +9,7 @@ import { onCommandFlowCancel, onCommandFlowError } from "@utils/events";
 
 type CommitCommandOptions = {
   dryRun?: boolean;
+
   scope?: string;
   message?: string;
   body?: string;
