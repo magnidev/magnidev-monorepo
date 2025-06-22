@@ -191,7 +191,7 @@ function tagCommand(program: Command): Command {
                 throw new Error(tagResult.message);
               }
 
-              return `Tag ${colors.green(tagResult.data)} created successfully for package ${colors.blue(pkgName)}.`;
+              return `Tag ${colors.green(tagResult.data.tagName)} created successfully for package ${colors.blue(pkgName)}.`;
             },
           },
         ]);

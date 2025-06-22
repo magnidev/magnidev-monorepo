@@ -9,6 +9,7 @@ import semver from "semver";
 import type { FunctionResultPromise } from "@/types";
 import type {
   CommitChangesResult,
+  CreateTagResult,
   SuggestVersionsResult,
 } from "@/types/services/releaseService";
 import RepositoryClient from "@services/repositoryService";
@@ -177,6 +178,7 @@ class ReleaseService {
     return {
       success,
       message,
+      data: dataResult,
     };
   }
   // #endregion - @commitChanges
@@ -193,10 +195,10 @@ class ReleaseService {
       shouldPush?: boolean;
       dryRun?: boolean;
     }
-  ): FunctionResultPromise<string | null> {
+  ): FunctionResultPromise<CreateTagResult> {
     let success: boolean = false;
     let message: string = "";
-    let dataResult: string | null = null;
+    let dataResult: CreateTagResult = null;
 
     const { packageName, version } = data;
     const { shouldPush, dryRun } = options;
@@ -247,7 +249,7 @@ class ReleaseService {
         return {
           success: true,
           message: "Dry run: Tag creation skipped",
-          data: tagName,
+          data: { tagName },
         };
       }
 
@@ -270,7 +272,7 @@ class ReleaseService {
 
       success = true;
       message = "Git tag created successfully";
-      dataResult = tagName;
+      dataResult = { tagName };
     } catch (error) {
       success = false;
       message = "Failed to create git tag";
