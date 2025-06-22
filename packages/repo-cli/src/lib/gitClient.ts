@@ -244,18 +244,19 @@ class GitClient {
    * @description Checks if there are any changes in the git repository.
    * @returns {FunctionResultPromise} A promise that resolves to a boolean indicating if there are changes.
    */
-  public async checkHasChanges(): FunctionResultPromise {
+  public async checkHasChanges(): FunctionResultPromise<StatusResult | null> {
     let success: boolean = false;
     let message: string = "";
+    let data: StatusResult | null = null;
 
     try {
-      const status = await this.getStatus();
-      if (!status || !status.data) {
-        throw new Error("Failed to retrieve status or no files found");
+      const changes = await this.getChanges();
+      if (!changes.success || !changes.data) {
+        throw new Error(changes.message);
       }
 
       const hasChanges: boolean =
-        status.data.files.length === 0 || status.data.not_added.length === 0;
+        changes.data.files.length === 0 || changes.data.not_added.length === 0;
 
       if (!hasChanges) {
         throw new Error("There are no changes in the repository");
@@ -263,6 +264,7 @@ class GitClient {
 
       success = true;
       message = "There are changes in the repository";
+      data = changes.data;
     } catch (error: any) {
       success = false;
       message = "No changes detected";
@@ -275,6 +277,7 @@ class GitClient {
     return {
       success,
       message,
+      data,
     };
   }
   // #endregion - @checkHasChanges

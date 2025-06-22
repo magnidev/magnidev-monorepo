@@ -28,11 +28,8 @@ function commitCommand(program: Command): Command {
       "-s, --scope <scope>",
       "commit scope (e.g., feat, fix, chore, etc.)"
     )
-    .option(
-      "-m, --message <message>",
-      "commit message (should be short and descriptive)"
-    )
-    .option("-b, --body <body>", "commit body (optional) (should be detailed)")
+    .option("-m, --message <message>", "a short and descriptive commit message")
+    .option("-b, --body <body>", "a detailed commit body (optional)")
     .action(async (options: CommitCommandOptions) => {
       // #region - Initialization
       const { dryRun, scope, message, body } = options;
@@ -57,8 +54,8 @@ function commitCommand(program: Command): Command {
       try {
         // #region - Initialize Clients
         const repositoryService = new RepositoryService();
-        const gitClient = repositoryService.gitClient;
         const releaseService = new ReleaseService(repositoryService);
+        const gitClient = repositoryService.gitClient;
 
         // Check if the current directory is a Git repository
         const isGitRepo = await repositoryService.checkIsGitRepo();
@@ -68,15 +65,12 @@ function commitCommand(program: Command): Command {
 
         // Check if there are any changes to commit
         const hasChanges = await gitClient.checkHasChanges();
-        if (!hasChanges.success) {
+        if (!hasChanges.success || !hasChanges.data) {
           onCommandFlowCancel("No changes to commit.");
         }
 
         // Get uncommitted changes
-        const changes = await gitClient.getChanges();
-        if (!changes.success || !changes.data) {
-          onCommandFlowCancel(changes.message);
-        }
+        const changes = hasChanges.data!;
 
         // Check if the repository is a monorepo or single project
         const repoType = await repositoryService.getRepoType();
@@ -90,8 +84,9 @@ function commitCommand(program: Command): Command {
             // #region - @packageName
             packageName: async () => {
               if (repoType.data === "single") {
-                const foundPackage =
-                  await repositoryService.singleProvider.getPackage();
+                const singleProvider = repositoryService.singleProvider;
+
+                const foundPackage = await singleProvider.getPackage();
                 if (!foundPackage.success || !foundPackage.data) {
                   onCommandFlowCancel(foundPackage.message);
                 }
@@ -100,8 +95,9 @@ function commitCommand(program: Command): Command {
               }
 
               if (repoType.data === "monorepo") {
-                const foundPackages =
-                  await repositoryService.monorepoProvider.getPackages();
+                const monorepoProvider = repositoryService.monorepoProvider;
+
+                const foundPackages = await monorepoProvider.getPackages();
                 if (!foundPackages.success || !foundPackages.data) {
                   onCommandFlowCancel(foundPackages.message);
                 }
@@ -243,11 +239,10 @@ function commitCommand(program: Command): Command {
                 return `${path}:${workingDir.toLocaleLowerCase()}`; // Use lowercase for consistency
               };
 
-              const options =
-                changes.data?.files.map((file) => ({
-                  label: getLabel(file.path, file.working_dir),
-                  value: getValue(file.path, file.working_dir),
-                })) || [];
+              const options = changes.files.map((file) => ({
+                label: getLabel(file.path, file.working_dir),
+                value: getValue(file.path, file.working_dir),
+              }));
 
               return await prompts.multiselect({
                 message: "Select the files to commit:",
