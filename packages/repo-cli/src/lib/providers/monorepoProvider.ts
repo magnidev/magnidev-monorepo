@@ -379,6 +379,41 @@ class MonorepoProvider {
     return { success, message, data };
   }
   // #endregion - @getRootPackageJson
+
+  // #region - @getTagsForPackage
+  /**
+   * @description Retrieves all tags associated with a specific package in the monorepo.
+   * @param packageName The name of the package to retrieve tags for.
+   * @returns {FunctionResultPromise<string[] | null>} A promise that resolves to a FunctionResult containing an array of tag names or an error message.
+   */
+  public async getTagsForPackage(
+    packageName: string
+  ): FunctionResultPromise<string[] | null> {
+    let success: boolean = false;
+    let message: string = "";
+    let data: string[] | null = null;
+
+    try {
+      // Get the tags for the package
+      const tagsResult = await this.gitClient.getTags();
+      if (!tagsResult.success || !tagsResult.data) {
+        throw new Error(tagsResult.message);
+      }
+
+      // Filter the tags to only include those for the specified package
+      data = tagsResult.data.all.filter((tag) => tag.includes(packageName));
+      success = true;
+      message = "Tags retrieved successfully.";
+    } catch (error) {
+      success = false;
+      message = `Failed to retrieve tags for package '${packageName}': ${error instanceof Error ? error.message : String(error)}`;
+    }
+
+    return { success, message, data };
+  }
+
+  // #region - @getTagsForPackage
+
   // #region - @filterCommitsForPackage
   /**
    * @description Filters commits to only include those relevant to the specific package.

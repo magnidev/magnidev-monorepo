@@ -10,24 +10,25 @@ import type { FunctionResult, FunctionResultPromise } from "@/types";
 import type {
   CommitChangesResult,
   CreateTagResult,
+  FilterCommitsResult,
   GroupCommitsByTypeResult,
   SuggestVersionsResult,
 } from "@/types/services/releaseService";
 import type { Commit } from "@/types/gitClient";
-import RepositoryClient from "@services/repositoryService";
+import RepositoryService from "@services/repositoryService";
 
 class ReleaseService {
-  private repositoryClient: RepositoryClient;
-  private gitClient: RepositoryClient["gitClient"];
-  private monorepoProvider: RepositoryClient["monorepoProvider"];
-  private singleProvider: RepositoryClient["singleProvider"];
+  private repositoryService: RepositoryService;
+  private gitClient: RepositoryService["gitClient"];
+  private monorepoProvider: RepositoryService["monorepoProvider"];
+  private singleProvider: RepositoryService["singleProvider"];
 
-  constructor(repositoryClient: RepositoryClient) {
+  constructor(repositoryClient: RepositoryService) {
     if (!repositoryClient) {
-      throw new Error("RepositoryClient is required");
+      throw new Error("RepositoryService is required");
     }
 
-    this.repositoryClient = repositoryClient;
+    this.repositoryService = repositoryClient;
     this.gitClient = repositoryClient.gitClient;
     this.monorepoProvider = repositoryClient.monorepoProvider;
     this.singleProvider = repositoryClient.singleProvider;
@@ -48,20 +49,22 @@ class ReleaseService {
 
     let versionIdentifier: string | undefined = undefined;
 
-    const repoType = await this.repositoryClient.getRepoType();
+    const repositoryService = this.repositoryService;
+
+    const repoType = await repositoryService.getRepoType();
     if (!repoType.success || !repoType.data) {
       throw new Error(repoType.message);
     }
 
     if (repoType.data === "monorepo") {
-      const config = await this.repositoryClient.monorepoProvider.getConfig();
+      const config = await repositoryService.monorepoProvider.getConfig();
       if (!config.success || !config.data) {
         throw new Error(config.message);
       }
 
       versionIdentifier = config.data?.release.preReleaseIdentifier;
     } else if (repoType.data === "single") {
-      const config = await this.repositoryClient.singleProvider.getConfig();
+      const config = await repositoryService.singleProvider.getConfig();
       if (!config.success || !config.data) {
         throw new Error(config.message);
       }
@@ -206,7 +209,9 @@ class ReleaseService {
     const { shouldPush, dryRun } = options;
 
     try {
-      const repoType = await this.repositoryClient.getRepoType();
+      const repositoryService = this.repositoryService;
+
+      const repoType = await repositoryService.getRepoType();
       if (!repoType.success || !repoType.data) {
         throw new Error(repoType.message);
       }
@@ -314,69 +319,23 @@ class ReleaseService {
     const { tagName } = data;
 
     try {
-      const repoType = await this.repositoryClient.getRepoType();
+      const repositoryService = this.repositoryService;
+
+      const repoType = await repositoryService.getRepoType();
       if (!repoType.success || !repoType.data) {
         throw new Error(repoType.message);
       }
 
-      let commits: Commit[] = [];
-
-      const commitsSinceLatestTag =
-        await this.gitClient.getCommitsSinceLastTag();
-
-      if (commitsSinceLatestTag.success && commitsSinceLatestTag.data) {
-        commits = commitsSinceLatestTag.data;
-      } else {
-        const allCommits = await this.gitClient.getCommits();
-        if (!allCommits.success || !allCommits.data) {
-          throw new Error(allCommits.message);
-        }
-
-        commits = allCommits.data;
-      }
-
-      let filteredCommits: Commit[] = [];
-
-      if (repoType.data === "monorepo") {
-        const config = await this.monorepoProvider.getConfig();
-        if (!config.success || !config.data) {
-          throw new Error(config.message);
-        }
-
-        const versioningStrategy = config.data.release.versioningStrategy;
-
-        if (versioningStrategy === "independent") {
-          const commitsForPackage =
-            await this.monorepoProvider.filterCommitsForPackage({
-              commits: commits,
-              pkgName: `@magnidev/repo-cli`,
-            });
-
-          if (!commitsForPackage.success || !commitsForPackage.data) {
-            throw new Error(commitsForPackage.message);
-          }
-
-          filteredCommits = commitsForPackage.data;
-        } else if (versioningStrategy === "fixed") {
-          // For fixed versioning, we consider all commits since the last tag
-
-          filteredCommits = commits;
-        }
-      } else if (repoType.data === "single") {
-        // For single project, we consider all commits since the last tag
-
-        filteredCommits = commits;
-      }
-
-      if (filteredCommits.length === 0) {
-        throw new Error("");
+      const filteredCommits = await this.filterCommits();
+      if (!filteredCommits.success || !filteredCommits.data) {
+        throw new Error(filteredCommits.message);
       }
 
       const releaseNotes = [`\n## Changes in ${tagName}\n`];
 
       // Group commits by type for better organization
       const commitsByType = this.groupCommitsByType({
-        commits: filteredCommits,
+        commits: filteredCommits.data,
       });
       if (!commitsByType.success || !commitsByType.data) {
         throw new Error(commitsByType.message);
@@ -437,6 +396,127 @@ class ReleaseService {
     };
   }
   // #endregion - @generateReleaseNotes
+
+  // #region - @filterCommits
+  public async filterCommits(): FunctionResultPromise<FilterCommitsResult> {
+    let success: boolean = false;
+    let message: string = "";
+    let dataResult: FilterCommitsResult = null;
+
+    try {
+      const repositoryService = this.repositoryService;
+      const gitClient = this.gitClient;
+
+      const repoType = await repositoryService.getRepoType();
+      if (!repoType.success || !repoType.data) {
+        throw new Error(repoType.message);
+      }
+
+      if (repoType.data === "monorepo") {
+        const monorepoProvider = this.monorepoProvider;
+
+        const monorepoConfig = await monorepoProvider.getConfig();
+        if (!monorepoConfig.success || !monorepoConfig.data) {
+          throw new Error(monorepoConfig.message);
+        }
+
+        const versioningStrategy =
+          monorepoConfig.data.release.versioningStrategy;
+
+        if (versioningStrategy === "independent") {
+          const allCommits = await gitClient.getCommits();
+          if (!allCommits.success || !allCommits.data) {
+            throw new Error(allCommits.message);
+          }
+
+          const tagsForPackage =
+            await monorepoProvider.getTagsForPackage("@magnidev/repo-cli"); // TODO: Implement package name extraction
+
+          if (tagsForPackage.success && tagsForPackage.data) {
+            // if there are tags, filter commits since the latest tag
+            const latestTag = tagsForPackage.data[0];
+
+            const commitsSinceLatestTag =
+              await gitClient.getCommitsSinceTag(latestTag);
+
+            if (!commitsSinceLatestTag.success || !commitsSinceLatestTag.data) {
+              throw new Error(commitsSinceLatestTag.message);
+            }
+
+            const commitsForPackage =
+              await monorepoProvider.filterCommitsForPackage({
+                commits: commitsSinceLatestTag.data,
+                pkgName: `@magnidev/repo-cli`, // TODO: Implement package name extraction
+              });
+
+            if (!commitsForPackage.success || !commitsForPackage.data) {
+              throw new Error(commitsForPackage.message);
+            }
+
+            dataResult = commitsForPackage.data;
+          } else {
+            // No tags found for package, return all commits for the package
+            const commitsForPackage =
+              await monorepoProvider.filterCommitsForPackage({
+                commits: allCommits.data,
+                pkgName: `@magnidev/repo-cli`, // TODO: Implement package name extraction
+              });
+
+            if (!commitsForPackage.success || !commitsForPackage.data) {
+              throw new Error(commitsForPackage.message);
+            }
+
+            dataResult = commitsForPackage.data;
+          }
+        } else if (versioningStrategy === "fixed") {
+          const commitsSinceLatestTag =
+            await gitClient.getCommitsSinceLatestTag();
+
+          if (commitsSinceLatestTag.success && commitsSinceLatestTag.data) {
+            dataResult = commitsSinceLatestTag.data;
+          } else {
+            const commits = await this.gitClient.getCommits();
+            if (!commits.success || !commits.data) {
+              throw new Error(commits.message);
+            }
+
+            dataResult = commits.data;
+          }
+        }
+      } else if (repoType.data === "single") {
+        const commitsSinceLatestTag =
+          await gitClient.getCommitsSinceLatestTag();
+
+        if (commitsSinceLatestTag.success && commitsSinceLatestTag.data) {
+          dataResult = commitsSinceLatestTag.data;
+        } else {
+          const commits = await this.gitClient.getCommits();
+          if (!commits.success || !commits.data) {
+            throw new Error(commits.message);
+          }
+
+          dataResult = commits.data;
+        }
+      }
+
+      message = "Filtered commits retrieved successfully";
+      success = true;
+    } catch (error) {
+      success = false;
+      message = "Failed to filter commits";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
+    }
+
+    return {
+      success,
+      message,
+      data: dataResult,
+    };
+  }
+  // #region - @filterCommits
 
   // #region - @groupCommitsByType
   /**

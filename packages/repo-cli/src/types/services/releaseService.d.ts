@@ -1,3 +1,5 @@
+import type { Commit } from "@/types/gitClient";
+
 /**
  * @description Type representing the suggested version updates for a repository.
  */
@@ -20,6 +22,14 @@ export type CreateTagResult = {
   tagName: string;
 } | null;
 
+/**
+ * @description Type representing the result of filtering commits based on a specific type.
+ */
+export type FilterCommitsResult = Commit[] | null;
+
+/**
+ * @description Type representing the result of grouping commits by their type.
+ */
 export type GroupCommitsByTypeResult = {
   [key: string]: any[];
 };

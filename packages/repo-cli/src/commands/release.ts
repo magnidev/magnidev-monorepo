@@ -62,15 +62,41 @@ function releaseCommand(program: Command): Command {
       if (!repoType.success || !repoType.data) {
         onCommandFlowCancel(repoType.message);
       }
-
       // #endregion - Initialize Clients
 
       try {
+        let releaseNotes: string = "";
+
+        const tasks = await prompts.tasks([
+          {
+            title: "Creating release notes",
+            task: async () => {
+              // Create the release
+              const releaseNotesResult =
+                await releaseService.generateReleaseNotes({
+                  tagName: tag!,
+                });
+
+              if (!releaseNotesResult.success || !releaseNotesResult.data) {
+                onCommandFlowError(releaseNotesResult.message);
+              }
+
+              releaseNotes = releaseNotesResult.data!;
+
+              return `Release notes generated successfully for tag: ${tag}`;
+            },
+          },
+        ]);
+
+        if (prompts.isCancel(tasks)) {
+          onCommandFlowCancel("Commit cancelled.");
+        }
+
+        prompts.note(releaseNotes, "Release Notes:");
+
         prompts.outro(outroMessage);
       } catch (error: any) {
-        onCommandFlowError(
-          error instanceof Error ? error : new Error(String(error))
-        );
+        onCommandFlowError(error);
       }
     });
 }
