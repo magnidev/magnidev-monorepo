@@ -613,12 +613,12 @@ class GitClient {
   }
   // #endregion - @getTags
 
-  // #region - @getCommitsSinceTag
+  // #region - @getCommitsSinceLatestTag
   /**
    * @description Retrieves commits since the latest tag or since a specific tag.
    * @returns {FunctionResultPromise<Commit[] | null>} A promise that resolves to commits since the tag.
    */
-  public async getCommitsSinceLastTag(): FunctionResultPromise<
+  public async getCommitsSinceLatestTag(): FunctionResultPromise<
     Commit[] | null
   > {
     let success: boolean = false;
@@ -667,7 +667,111 @@ class GitClient {
       data,
     };
   }
+  // #endregion - @getCommitsSinceLatestTag
+
+  // #region - @getCommitsSinceTag
+  /**
+   * @description Retrieves commits since a specific tag.
+   * @param tagName The name of the tag to get commits since.
+   * @returns {FunctionResultPromise<Commit[] | null>} A promise that resolves to commits since the tag.
+   */
+  public async getCommitsSinceTag(
+    tagName: string
+  ): FunctionResultPromise<Commit[] | null> {
+    let success: boolean = false;
+    let message: string = "";
+    let data: Commit[] | null = null;
+
+    try {
+      // Verify if the provided tag exists
+      const tags = await this.getTags();
+      if (!tags.success || !tags.data) {
+        throw new Error(tags.message);
+      }
+
+      if (!tags.data.all.includes(tagName)) {
+        throw new Error(`Tag '${tagName}' not found`);
+      }
+
+      // Get commits since the tag
+      const log = await this.client.log({
+        from: tagName,
+        to: "HEAD",
+      });
+
+      if (!log.all || log.all.length === 0) {
+        success = true;
+        message = `No commits found since tag '${tagName}'`;
+        data = [];
+      } else {
+        success = true;
+        message = `Found ${log.all.length} commit(s) since tag '${tagName}'`;
+        data = log.all.map((commit) => ({
+          ...commit,
+          message: commit.message,
+        }));
+      }
+    } catch (error) {
+      success = false;
+      message = "Failed to retrieve commits since tag";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
+    }
+
+    return {
+      success,
+      message,
+      data,
+    };
+  }
   // #endregion - @getCommitsSinceTag
+
+  // #region - @getCommitByHash
+  /**
+   * @description Retrieves a commit by its hash.
+   * @param commitHash The hash of the commit to retrieve.
+   * @returns {FunctionResultPromise<Commit | null>} A promise that resolves to the commit object or null if not found.
+   */
+  public async getCommitByHash(
+    commitHash: string
+  ): FunctionResultPromise<Commit | null> {
+    let success: boolean = false;
+    let message: string = "";
+    let data: Commit | null = null;
+
+    try {
+      const log = await this.client.log({
+        from: commitHash,
+        to: commitHash,
+      });
+
+      if (!log.all || log.all.length === 0) {
+        success = true;
+        message = `No commit found with hash '${commitHash}'`;
+        data = null;
+      } else {
+        success = true;
+        message = `Found commit with hash '${commitHash}'`;
+        data = log.all[0];
+      }
+    } catch (error) {
+      success = false;
+      message = "Failed to retrieve commit by hash";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
+    }
+
+    return {
+      success,
+      message,
+      data,
+    };
+  }
+  // #endregion - @getCommitByHash
 
   // #region - @getChangeInfo
   /**
