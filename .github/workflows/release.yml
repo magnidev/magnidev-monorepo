@@ -1,226 +1,54 @@
-name: Monorepo Release
+name: Release
 
 on:
   push:
-    tags:
-      - "v*" # Fixed versioning: v1.0.0
-      - "*" # All tags - we'll filter in the job
-  workflow_dispatch: # Allow manual triggering for testing
-
-env:
-  NODE_VERSION: "18"
+    # Trigger on pushes to branches that match 'release/*'.
+    # This allows for versioned releases based on branch names.
+    branches:
+      - release/*
+    # Trigger on changes in the 'packages' directory.
+    paths:
+      - "packages/**"
 
 jobs:
-  detect-release-type:
-    name: Detect Release Type
+  release:
+    # restrict workflow execution to repositories owned by 'magnidev'.
+    # this is intentional for internal use. forks or external contributions will not execute this workflow.
+    if: github.repository_owner == 'magnidev'
+    name: Release Package
     runs-on: ubuntu-latest
-    outputs:
-      is_valid: ${{ steps.detect.outputs.is_valid }}
-      is_fixed: ${{ steps.detect.outputs.is_fixed }}
-      package_name: ${{ steps.detect.outputs.package_name }}
-      version: ${{ steps.detect.outputs.version }}
-      tag: ${{ steps.detect.outputs.tag }}
-      is_prerelease: ${{ steps.detect.outputs.is_prerelease }}
 
     steps:
-      - name: Detect release type and extract info
-        id: detect
-        run: |
-          TAG=${GITHUB_REF#refs/tags/}
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
+      - name: Set up Bot Token
+        id: bot-token
+        uses: actions/create-github-app-token@v2
+        with:
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          app-id: ${{ secrets.BOT_APP_ID }}
+          private-key: ${{ secrets.BOT_PRIVATE_KEY }}
 
-          # Check if this is a valid release tag
-          if [[ $TAG =~ ^v[0-9] ]]; then
-            # Fixed versioning: v1.0.0
-            echo "is_valid=true" >> $GITHUB_OUTPUT
-            echo "is_fixed=true" >> $GITHUB_OUTPUT
-            VERSION=${TAG#v}
-            echo "version=$VERSION" >> $GITHUB_OUTPUT
-            echo "package_name=" >> $GITHUB_OUTPUT
-          elif [[ $TAG =~ ^@.+@[0-9] ]]; then
-            # Independent versioning: @org/package@1.0.0
-            echo "is_valid=true" >> $GITHUB_OUTPUT
-            echo "is_fixed=false" >> $GITHUB_OUTPUT
-            PACKAGE_NAME=${TAG%@*}
-            VERSION=${TAG##*@}
-            echo "package_name=$PACKAGE_NAME" >> $GITHUB_OUTPUT
-            echo "version=$VERSION" >> $GITHUB_OUTPUT
-          else
-            # Not a release tag, skip
-            echo "is_valid=false" >> $GITHUB_OUTPUT
-            echo "Skipping tag $TAG - not a release tag pattern"
-            echo "skip_reason=Not a release tag format" >> $GITHUB_OUTPUT
-          fi
-
-          # Check if prerelease (only if valid)
-          if [[ "${is_valid:-false}" == "true" ]]; then
-            echo "is_prerelease=$([[ $VERSION == *"canary"* ]] && echo "true" || echo "false")" >> $GITHUB_OUTPUT
-          fi
-
-  release-fixed:
-    name: Release All Packages (Fixed Versioning)
-    if: needs.detect-release-type.outputs.is_valid == 'true' && needs.detect-release-type.outputs.is_fixed == 'true'
-    needs: detect-release-type
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      id-token: write
-
-    steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          ref: ${{ github.ref }}
+          token: ${{ steps.bot-token.outputs.token }}
 
-      - name: Setup Node.js and pnpm
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          registry-url: "https://registry.npmjs.org"
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: latest
+          node-version: "22.x"
+          cache: "pnpm"
+          registry-url: "https://registry.npmjs.org/"
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
-      - name: Run tests
-        run: pnpm test
-
-      - name: Build all packages
+      - name: Build Packages
         run: pnpm build
 
-      - name: Generate release notes
-        id: release_notes
-        run: |
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
-
-          if [ -z "$PREVIOUS_TAG" ]; then
-            RELEASE_NOTES="Initial release ${{ needs.detect-release-type.outputs.tag }}"
-          else
-            RELEASE_NOTES="## Changes since $PREVIOUS_TAG\\n\\n"
-            RELEASE_NOTES="$RELEASE_NOTES$(git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD)"
-          fi
-
-          echo "notes<<EOF" >> $GITHUB_OUTPUT
-          echo -e "$RELEASE_NOTES" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Create GitHub Release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ needs.detect-release-type.outputs.tag }}
-          release_name: Release ${{ needs.detect-release-type.outputs.tag }}
-          body: ${{ steps.release_notes.outputs.notes }}
-          prerelease: ${{ needs.detect-release-type.outputs.is_prerelease }}
-
-      - name: Publish all packages
-        run: |
-          # Update all package versions and publish
-          pnpm -r exec -- npm version ${{ needs.detect-release-type.outputs.version }} --no-git-tag-version
-
-          if [[ "${{ needs.detect-release-type.outputs.is_prerelease }}" == "true" ]]; then
-            pnpm -r publish --tag canary --access public --no-git-checks
-          else
-            pnpm -r publish --access public --no-git-checks
-          fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-  release-independent:
-    name: Release Single Package (Independent Versioning)
-    if: needs.detect-release-type.outputs.is_valid == 'true' && needs.detect-release-type.outputs.is_fixed == 'false'
-    needs: detect-release-type
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      id-token: write
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node.js and pnpm
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          registry-url: "https://registry.npmjs.org"
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: latest
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Find package directory
-        id: find_package
-        run: |
-          PACKAGE_NAME="${{ needs.detect-release-type.outputs.package_name }}"
-
-          # Find the package directory
-          PACKAGE_DIR=$(find packages -name "package.json" -exec grep -l "\"name\":\\s*\"$PACKAGE_NAME\"" {} \; | head -1 | xargs dirname)
-
-          if [ -z "$PACKAGE_DIR" ]; then
-            echo "Package $PACKAGE_NAME not found!"
-            exit 1
-          fi
-
-          echo "package_dir=$PACKAGE_DIR" >> $GITHUB_OUTPUT
-
-      - name: Run tests for package
-        run: |
-          cd ${{ steps.find_package.outputs.package_dir }}
-          pnpm test
-
-      - name: Build package
-        run: |
-          cd ${{ steps.find_package.outputs.package_dir }}
-          pnpm build
-
-      - name: Generate release notes
-        id: release_notes
-        run: |
-          PACKAGE_NAME="${{ needs.detect-release-type.outputs.package_name }}"
-          PREVIOUS_TAG=$(git tag -l "$PACKAGE_NAME@*" --sort=-version:refname | head -2 | tail -1)
-
-          if [ -z "$PREVIOUS_TAG" ]; then
-            RELEASE_NOTES="Initial release for $PACKAGE_NAME@${{ needs.detect-release-type.outputs.version }}"
-          else
-            RELEASE_NOTES="## Changes in $PACKAGE_NAME since $PREVIOUS_TAG\\n\\n"
-            # Get commits that affected this package
-            RELEASE_NOTES="$RELEASE_NOTES$(git log --pretty=format:"- %s (%h)" --oneline $PREVIOUS_TAG..HEAD -- ${{ steps.find_package.outputs.package_dir }})"
-          fi
-
-          echo "notes<<EOF" >> $GITHUB_OUTPUT
-          echo -e "$RELEASE_NOTES" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Create GitHub Release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ needs.detect-release-type.outputs.tag }}
-          release_name: ${{ needs.detect-release-type.outputs.package_name }}@${{ needs.detect-release-type.outputs.version }}
-          body: ${{ steps.release_notes.outputs.notes }}
-          prerelease: ${{ needs.detect-release-type.outputs.is_prerelease }}
-
-      - name: Publish package
-        run: |
-          cd ${{ steps.find_package.outputs.package_dir }}
-
-          if [[ "${{ needs.detect-release-type.outputs.is_prerelease }}" == "true" ]]; then
-            pnpm publish --tag canary --access public --no-git-checks
-          else
-            pnpm publish --access public --no-git-checks
-          fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Release Packages
+        run: pnpm run release
