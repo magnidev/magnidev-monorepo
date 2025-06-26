@@ -849,6 +849,68 @@ class GitClient {
     return commitMsg;
   };
   // #endregion - @constructCommitMessage
+
+  // #region - @createBranch
+  /**
+   * @description Creates and checks out a new branch.
+   * @param branchName The name of the branch to create.
+   * @returns {FunctionResultPromise} A promise that resolves to a FunctionResult indicating success or failure.
+   */
+  public async createBranch(branchName: string): FunctionResultPromise {
+    let success: boolean = false;
+    let message: string = "";
+
+    try {
+      await this.client.checkoutLocalBranch(branchName);
+
+      success = true;
+      message = `Branch '${branchName}' created and checked out successfully`;
+    } catch (error) {
+      success = false;
+      message = "Failed to create branch";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
+    }
+
+    return {
+      success,
+      message,
+    };
+  }
+  // #endregion - @createBranch
+
+  // #region - @pushBranch
+  /**
+   * @description Pushes a branch to the remote repository.
+   * @param branchName The name of the branch to push.
+   * @returns {FunctionResultPromise} A promise that resolves to a FunctionResult indicating success or failure.
+   */
+  public async pushBranch(branchName: string): FunctionResultPromise {
+    let success: boolean = false;
+    let message: string = "";
+
+    try {
+      await this.client.push("origin", branchName);
+
+      success = true;
+      message = `Branch '${branchName}' pushed to remote repository successfully`;
+    } catch (error) {
+      success = false;
+      message = "Failed to push branch";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
+    }
+
+    return {
+      success,
+      message,
+    };
+  }
+  // #endregion - @pushBranch
 }
 
 export default GitClient;
