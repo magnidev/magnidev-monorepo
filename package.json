@@ -17,6 +17,7 @@
     "url": "https://github.com/magnidev/magnidev-monorepo/issues"
   },
   "scripts": {
+    "release": "pnpm dlx @magnidev/repo-cli@latest release",
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
