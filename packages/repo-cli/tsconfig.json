@@ -13,7 +13,8 @@
       "@utils/*": ["src/utils/*"],
       "@config/*": ["src/config/*"],
       "@services/*": ["src/lib/services/*"],
-      "@providers/*": ["src/lib/providers/*"]
+      "@providers/*": ["src/lib/providers/*"],
+      "@strategies/*": ["src/lib/strategies/*"]
     } /* Path mappings for module resolution */,
     "declarationDir": "./dist/types" /* Output directory for generated declaration files */,
     "tsBuildInfoFile": "./node_modules/.cache/tsconfig.tsbuildinfo" /* Specify the path to .tsbuildinfo incremental compilation file. */,

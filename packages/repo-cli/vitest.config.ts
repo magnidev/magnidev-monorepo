@@ -19,6 +19,7 @@ export default defineConfig({
       "@config": resolve(__dirname, "./src/config"),
       "@services": resolve(__dirname, "./src/lib/services"),
       "@providers": resolve(__dirname, "./src/lib/providers"),
+      "@strategies": resolve(__dirname, "./src/lib/strategies"),
     },
   },
 });
