@@ -1,12 +1,18 @@
 name: Release
 
 on:
+  # Trigger on pushes to main branch (when release branches are merged)
   push:
-    # Trigger on pushes to branches that match 'release/*'.
-    # This allows for versioned releases based on branch names.
     branches:
-      - release/*
-    # Trigger on changes in the 'packages' directory.
+      - main
+    paths:
+      - "packages/**"
+
+  # Also trigger on PR closure to main (for merged PRs from release branches)
+  pull_request:
+    types: [closed]
+    branches:
+      - main
     paths:
       - "packages/**"
 

@@ -7,7 +7,7 @@ import initCommand from "@commands/init";
 import infoCommand from "@commands/info";
 import commitCommand from "@commands/commit";
 import releaseCommand from "@commands/release";
-import tagCommand from "@commands/tag";
+import prepareReleaseCommand from "@commands/prepareRelease";
 
 // Display the intro message
 const program = new Command();
@@ -25,7 +25,7 @@ initCommand(program);
 infoCommand(program);
 commitCommand(program);
 releaseCommand(program);
-tagCommand(program);
+prepareReleaseCommand(program);
 
 // Handle unknown commands
 program.parse(process.argv);

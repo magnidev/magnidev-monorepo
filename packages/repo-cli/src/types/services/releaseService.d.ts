@@ -16,11 +16,29 @@ export type SuggestVersionsResult = {
 export type CommitChangesResult = { changes: string[] } | null;
 
 /**
+ * @description Type representing the result of creating a release branch in a repository.
+ */
+export type CreateReleaseBranchResult = {
+  branchName: string;
+  releaseNotes: string;
+} | null;
+
+/**
  * @description Type representing the result of creating a tag in a repository.
  */
 export type CreateTagResult = {
   tagName: string;
 } | null;
+
+/**
+ * @description Type representing the result of generating release notes for a repository.
+ */
+export type GenerateReleaseNotesResult = string | null;
+
+/**
+ * @description Type representing the result of generating a changelog for a repository.
+ */
+export type GenerateChangelogResult = string | null;
 
 /**
  * @description Type representing the result of filtering commits based on a specific type.

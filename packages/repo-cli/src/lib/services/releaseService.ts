@@ -9,19 +9,26 @@ import semver from "semver";
 import type { FunctionResult, FunctionResultPromise } from "@/types";
 import type {
   CommitChangesResult,
+  CreateReleaseBranchResult,
   CreateTagResult,
   FilterCommitsResult,
+  GenerateChangelogResult,
+  GenerateReleaseNotesResult,
   GroupCommitsByTypeResult,
   SuggestVersionsResult,
 } from "@/types/services/releaseService";
 import type { Commit } from "@/types/gitClient";
 import RepositoryService from "@services/repositoryService";
+import BranchReleaseStrategy from "@strategies/branchReleaseStrategy";
 
 class ReleaseService {
   private repositoryService: RepositoryService;
   private gitClient: RepositoryService["gitClient"];
+
   private monorepoProvider: RepositoryService["monorepoProvider"];
   private singleProvider: RepositoryService["singleProvider"];
+
+  private branchReleaseStrategy: BranchReleaseStrategy | null = null;
 
   constructor(repositoryClient: RepositoryService) {
     if (!repositoryClient) {
@@ -30,73 +37,10 @@ class ReleaseService {
 
     this.repositoryService = repositoryClient;
     this.gitClient = repositoryClient.gitClient;
+
     this.monorepoProvider = repositoryClient.monorepoProvider;
     this.singleProvider = repositoryClient.singleProvider;
   }
-
-  // #region - @suggestVersions
-  /**
-   * @description Suggests the next versions for a given version.
-   * @param currentVersion The current version.
-   * @returns An array of suggested next versions.
-   */
-  public async suggestVersions(
-    currentVersion: string
-  ): FunctionResultPromise<SuggestVersionsResult> {
-    let success: boolean = false;
-    let message: string = "";
-    let data: SuggestVersionsResult = null;
-
-    let versionIdentifier: string | undefined = undefined;
-
-    const repositoryService = this.repositoryService;
-
-    const repoType = await repositoryService.getRepoType();
-    if (!repoType.success || !repoType.data) {
-      throw new Error(repoType.message);
-    }
-
-    if (repoType.data === "monorepo") {
-      const config = await repositoryService.monorepoProvider.getConfig();
-      if (!config.success || !config.data) {
-        throw new Error(config.message);
-      }
-
-      versionIdentifier = config.data?.release.preReleaseIdentifier;
-    } else if (repoType.data === "single") {
-      const config = await repositoryService.singleProvider.getConfig();
-      if (!config.success || !config.data) {
-        throw new Error(config.message);
-      }
-
-      versionIdentifier = config.data?.release.preReleaseIdentifier;
-    }
-
-    try {
-      success = true;
-      message = "Suggested versions retrieved successfully";
-      data = {
-        major: semver.inc(currentVersion, "major"),
-        minor: semver.inc(currentVersion, "minor"),
-        patch: semver.inc(currentVersion, "patch"),
-        prerelease: semver.inc(currentVersion, "prerelease", versionIdentifier),
-      };
-    } catch (error) {
-      success = false;
-      message = "Failed to suggest versions";
-
-      if (error instanceof Error) {
-        message = error.message;
-      }
-    }
-
-    return {
-      success,
-      message,
-      data,
-    };
-  }
-  // #endregion - @suggestVersions
 
   // #region - @commitChanges
   /**
@@ -187,6 +131,84 @@ class ReleaseService {
     };
   }
   // #endregion - @commitChanges
+
+  // #region - @createReleaseBranch
+  /**
+   * @description Creates a release branch using the BranchReleaseStrategy.
+   * @param data The data containing package name, version, and commit messages.
+   * @param options Options for the release branch creation.
+   * @returns A promise that resolves to a FunctionResult indicating success or failure.
+   */
+  public async createReleaseBranch(
+    data: {
+      packageName?: string;
+      version: string;
+      commits?: Commit[];
+    },
+    options: {
+      shouldPush?: boolean;
+      dryRun?: boolean;
+    }
+  ): FunctionResultPromise<CreateReleaseBranchResult> {
+    let success: boolean = false;
+    let message: string = "";
+    let dataResult: CreateReleaseBranchResult = null;
+
+    const { packageName, version } = data;
+    const { shouldPush = true, dryRun = false } = options;
+
+    try {
+      if (!this.branchReleaseStrategy) {
+        this.branchReleaseStrategy = new BranchReleaseStrategy(
+          this.repositoryService
+        );
+      }
+
+      // 1. Generate release notes
+      const releaseNotesResult = await this.generateReleaseNotes({
+        tagName: version,
+        packageName,
+      });
+      if (!releaseNotesResult.success || !releaseNotesResult.data) {
+        throw new Error(releaseNotesResult.message);
+      }
+
+      // Use the BranchReleaseStrategy to handle the branch creation
+      const result = await this.branchReleaseStrategy.execute(
+        { releaseNotes: releaseNotesResult.data, packageName, version },
+        {
+          shouldPush,
+          dryRun,
+        }
+      );
+
+      if (!result.success || !result.data) {
+        throw new Error(result.message);
+      }
+
+      // Map the strategy result to the expected service result format
+      success = true;
+      message = "Release branch created successfully";
+      dataResult = {
+        branchName: result.data.branchName,
+        releaseNotes: result.data.releaseNotes,
+      };
+    } catch (error) {
+      success = false;
+      message = "Failed to create release branch";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
+    }
+
+    return {
+      success,
+      message,
+      data: dataResult,
+    };
+  }
+  // #endregion - @createReleaseBranch
 
   // #region - @createTag
   /**
@@ -311,12 +333,13 @@ class ReleaseService {
    */
   public async generateReleaseNotes(data: {
     tagName: string;
-  }): FunctionResultPromise<string> {
+    packageName?: string;
+  }): FunctionResultPromise<GenerateReleaseNotesResult> {
     let success: boolean = false;
     let message: string = "";
-    let dataResult: string = "";
+    let dataResult: GenerateReleaseNotesResult = "";
 
-    const { tagName } = data;
+    const { tagName, packageName } = data;
 
     try {
       const repositoryService = this.repositoryService;
@@ -326,7 +349,9 @@ class ReleaseService {
         throw new Error(repoType.message);
       }
 
-      const filteredCommits = await this.filterCommits();
+      const filteredCommits = await this.filterCommits({
+        packageName,
+      });
       if (!filteredCommits.success || !filteredCommits.data) {
         throw new Error(filteredCommits.message);
       }
@@ -362,16 +387,21 @@ class ReleaseService {
           releaseNotes.push("");
 
           for (const commit of commitsByType.data[type]) {
-            const message = commit.message.split("\n")[0];
-            const author = commit.author;
+            const commitMessage = commit.message.split("\n")[0];
+            const commitAuthor = commit.author_name;
             // Remove conventional commit prefix if present
-            const cleanMessage = message.replace(
+            const cleanMessage = commitMessage.replace(
               /^(feat|fix|docs|style|refactor|perf|test|chore)(\(.+?\))?:\s*/,
               ""
             );
-            releaseNotes.push(
-              `- ${cleanMessage}${author ? ` by ${author}` : ""}`
-            );
+
+            let line = `- ${cleanMessage}`;
+
+            if (commitAuthor) {
+              line += ` by @${commitAuthor}`;
+            }
+
+            releaseNotes.push(line);
           }
           releaseNotes.push(""); // Add empty line after each section
         }
@@ -397,11 +427,112 @@ class ReleaseService {
   }
   // #endregion - @generateReleaseNotes
 
+  // #region - @generateChangelog
+  /**
+   * @description Generates a changelog based on the provided release notes.
+   * @param data The data containing the release notes.
+   * @returns The generated changelog.
+   */
+  public async generateChangelog(data: {
+    releaseNotes: string;
+  }): FunctionResultPromise<GenerateChangelogResult> {
+    let success: boolean = false;
+    let message: string = "";
+    let dataResult: GenerateChangelogResult = "";
+
+    const { releaseNotes } = data;
+
+    try {
+    } catch (error) {
+      success = false;
+      message = "Failed to generate changelog";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
+    }
+
+    return {
+      success,
+      message,
+      data: dataResult,
+    };
+  }
+  // #endregion - @generateChangelog
+
+  // #region - @suggestVersions
+  /**
+   * @description Suggests the next versions for a given version.
+   * @param currentVersion The current version.
+   * @returns An array of suggested next versions.
+   */
+  public async suggestVersions(
+    currentVersion: string
+  ): FunctionResultPromise<SuggestVersionsResult> {
+    let success: boolean = false;
+    let message: string = "";
+    let data: SuggestVersionsResult = null;
+
+    let versionIdentifier: string | undefined = undefined;
+
+    const repositoryService = this.repositoryService;
+
+    const repoType = await repositoryService.getRepoType();
+    if (!repoType.success || !repoType.data) {
+      throw new Error(repoType.message);
+    }
+
+    if (repoType.data === "monorepo") {
+      const config = await repositoryService.monorepoProvider.getConfig();
+      if (!config.success || !config.data) {
+        throw new Error(config.message);
+      }
+
+      versionIdentifier = config.data?.release.preReleaseIdentifier;
+    } else if (repoType.data === "single") {
+      const config = await repositoryService.singleProvider.getConfig();
+      if (!config.success || !config.data) {
+        throw new Error(config.message);
+      }
+
+      versionIdentifier = config.data?.release.preReleaseIdentifier;
+    }
+
+    try {
+      success = true;
+      message = "Suggested versions retrieved successfully";
+      data = {
+        major: semver.inc(currentVersion, "major"),
+        minor: semver.inc(currentVersion, "minor"),
+        patch: semver.inc(currentVersion, "patch"),
+        prerelease: semver.inc(currentVersion, "prerelease", versionIdentifier),
+      };
+    } catch (error) {
+      success = false;
+      message = "Failed to suggest versions";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
+    }
+
+    return {
+      success,
+      message,
+      data,
+    };
+  }
+  // #endregion - @suggestVersions
+
   // #region - @filterCommits
-  public async filterCommits(): FunctionResultPromise<FilterCommitsResult> {
+  private async filterCommits(data: {
+    packageName?: string;
+  }): FunctionResultPromise<FilterCommitsResult> {
     let success: boolean = false;
     let message: string = "";
     let dataResult: FilterCommitsResult = null;
+
+    const { packageName } = data;
 
     try {
       const repositoryService = this.repositoryService;
@@ -424,13 +555,19 @@ class ReleaseService {
           monorepoConfig.data.release.versioningStrategy;
 
         if (versioningStrategy === "independent") {
+          if (!packageName) {
+            throw new Error(
+              "Package name is required for independent versioning"
+            );
+          }
+
           const allCommits = await gitClient.getCommits();
           if (!allCommits.success || !allCommits.data) {
             throw new Error(allCommits.message);
           }
 
           const tagsForPackage =
-            await monorepoProvider.getTagsForPackage("@magnidev/repo-cli"); // TODO: Implement package name extraction
+            await monorepoProvider.getTagsForPackage(packageName);
 
           if (tagsForPackage.success && tagsForPackage.data) {
             // if there are tags, filter commits since the latest tag
@@ -446,7 +583,7 @@ class ReleaseService {
             const commitsForPackage =
               await monorepoProvider.filterCommitsForPackage({
                 commits: commitsSinceLatestTag.data,
-                pkgName: `@magnidev/repo-cli`, // TODO: Implement package name extraction
+                pkgName: packageName,
               });
 
             if (!commitsForPackage.success || !commitsForPackage.data) {
@@ -459,7 +596,7 @@ class ReleaseService {
             const commitsForPackage =
               await monorepoProvider.filterCommitsForPackage({
                 commits: allCommits.data,
-                pkgName: `@magnidev/repo-cli`, // TODO: Implement package name extraction
+                pkgName: packageName,
               });
 
             if (!commitsForPackage.success || !commitsForPackage.data) {
@@ -543,13 +680,18 @@ class ReleaseService {
         );
 
         let type = "other";
+
+        // If the commit message matches a conventional commit type, extract it
         if (match) {
           type = match[1];
         }
 
+        // If the type is not recognized, default to "other"
         if (!groups[type]) {
           groups[type] = [];
         }
+
+        // Add the commit to the appropriate group
         groups[type].push(commit);
       }
 

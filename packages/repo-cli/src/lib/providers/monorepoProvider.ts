@@ -517,7 +517,7 @@ class MonorepoProvider {
    * @param packageName The name of the package.
    * @returns The relative path to the package directory.
    */
-  private async getPackagePath(
+  public async getPackagePath(
     packageName: string
   ): FunctionResultPromise<string | null> {
     let success: boolean = false;
