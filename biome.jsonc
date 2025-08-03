@@ -3,7 +3,6 @@
   "extends": ["ultracite"],
   "files": {
     // Exclude common output directories.
-    // Include all TypeScript and TSX files in the src directory and its subdirectories.
     "includes": [
       "!**/node_modules/**",
       "!**/public/**",
@@ -14,9 +13,7 @@
       "!**/.git/**",
       "!**/.cache/**",
 
-      /**
-       * Include all TypeScript and TSX files in the src directory and its subdirectories.
-       */
+      // Include all TypeScript and TSX files in the src directory and its subdirectories.
       "./**/*.{json,jsonc,md,mdx}",
       "./src/**/*.ts",
       "./src/**/*.tsx"
