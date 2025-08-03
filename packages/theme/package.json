@@ -32,9 +32,9 @@
     "registry": "https://registry.npmjs.org/"
   },
   "peerDependencies": {
-    "tailwindcss": "^4.1.8"
+    "tailwindcss": "^4.1.11"
   },
   "dependencies": {
-    "tw-animate-css": "^1.3.3"
+    "tw-animate-css": "^1.3.6"
   }
 }

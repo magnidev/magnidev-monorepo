@@ -1,12 +1,11 @@
 {
   "name": "magnidev-monorepo",
-  "license": "ISC",
+  "license": "MIT",
   "private": true,
   "description": "Monorepo for Magni Development tools.",
-  "publisher": "fermeridamagni <Magni Development>",
   "author": {
     "name": "fermeridamagni <Magni Development>",
-    "url": "https://magnideveloper.com"
+    "url": "https://magni.dev"
   },
   "repository": {
     "type": "git",
@@ -19,36 +18,21 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "lint": "turbo run lint",
-    "format:check": "turbo run format:check",
-    "format:write": "turbo run format:write",
     "test": "turbo run test",
-    "repo-cli": "pnpm dlx @magnidev/repo-cli@latest",
-    "repo-cli:canary": "pnpm dlx @magnidev/repo-cli@canary",
-    "repo-cli:dev": "cd packages/repo-cli && pnpm build && cd ../.. && node ./packages/repo-cli/dist/main.js"
+    "format": "pnpm dlx ultracite@latest format",
+    "lint": "pnpm dlx ultracite@latest lint"
   },
-  "repoType": "monorepo",
   "workspaces": [
     "packages/*"
   ],
-  "release": {
-    "tagFormat": "${name}@${version}",
-    "repositoryUrl": "https://github.com/magnidev/magnidev-monorepo",
-    "versioningStrategy": "independent",
-    "preReleaseIdentifier": "canary"
-  },
   "devDependencies": {
-    "@magnidev/repo-cli": "^1.0.2",
-    "@typescript-eslint/eslint-plugin": "^8.34.0",
-    "@typescript-eslint/parser": "^8.34.0",
-    "eslint": "^9.28.0",
-    "eslint-config-prettier": "^10.1.5",
-    "eslint-plugin-prettier": "^5.4.1",
-    "prettier": "^3.5.3",
-    "turbo": "^2.5.4",
-    "typescript": "5.8.3"
+    "@biomejs/biome": "2.1.3",
+    "husky": "^9.1.7",
+    "turbo": "^2.5.5",
+    "typescript": "5.9.2",
+    "ultracite": "5.1.2"
   },
-  "packageManager": "pnpm@10.12.1",
+  "packageManager": "pnpm@10.14.0",
   "engines": {
     "node": ">=18"
   }
