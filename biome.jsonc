@@ -2,10 +2,9 @@
   "$schema": "https://biomejs.dev/schemas/2.1.2/schema.json",
   "extends": ["ultracite"],
   "files": {
+    // Exclude common output directories.
+    // Include all TypeScript and TSX files in the src directory and its subdirectories.
     "includes": [
-      /**
-       * Exclude common output directories.
-       */
       "!**/node_modules/**",
       "!**/public/**",
       "!**/dist/**",
