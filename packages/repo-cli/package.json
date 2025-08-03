@@ -62,22 +62,22 @@
     "@clack/prompts": "^0.11.0",
     "@octokit/rest": "^22.0.0",
     "commander": "^14.0.0",
-    "dotenv": "^16.5.0",
+    "dotenv": "^17.2.1",
     "fast-glob": "^3.3.3",
     "picocolors": "^1.1.1",
     "semver": "^7.7.2",
     "simple-git": "^3.28.0",
-    "zod": "^3.25.67"
+    "zod": "^4.0.14"
   },
   "devDependencies": {
     "@magnidev/typescript-config": "workspace:*",
-    "@types/node": "^24.0.3",
+    "@types/node": "^24.1.0",
     "@types/semver": "^7.7.0",
     "@vitest/ui": "^3.2.4",
     "ts-node": "^10.9.2",
     "ts-patch": "^3.3.0",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "5.8.3",
+    "typescript": "5.9.2",
     "typescript-transform-paths": "^3.5.5",
     "vitest": "^3.2.4"
   }
