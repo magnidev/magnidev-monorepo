@@ -1,7 +1,3 @@
----
-applyTo: "**/*.{ts,tsx,js,jsx}"
----
-
 # Project Context
 
 Ultracite enforces strict type safety, accessibility standards, and consistent code quality for JavaScript/TypeScript projects using Biome's lightning-fast formatter and linter.
@@ -318,7 +314,6 @@ Ultracite enforces strict type safety, accessibility standards, and consistent c
 - Don't use disabled tests.
 
 ## Common Tasks
-
 - `pnpm dlx ultracite init` - Initialize Ultracite in your project
 - `pnpm dlx ultracite format` - Format and fix code automatically
 - `pnpm dlx ultracite lint` - Check for issues without fixing
