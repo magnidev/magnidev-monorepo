@@ -1,7 +1,7 @@
 {
   "name": "@magnidev/react-hooks",
-  "version": "1.0.0",
-  "description": "",
+  "version": "1.0.1",
+  "description": "A collection of reusable React hooks for modern web development, designed to simplify state management, validation, and other common patterns in React applications.",
   "keywords": [
     "react",
     "hooks",
@@ -22,7 +22,7 @@
     "url": "https://github.com/magnidev/magnidev-monorepo/issues",
     "email": "help@magni.dev"
   },
-  "homepage": "https://www.magni.dev/en/docs/developers/packages/react-hooks/getting-started/introduction",
+  "homepage": "https://magni.dev/en/docs/developers/packages/react-hooks/getting-started/introduction",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"

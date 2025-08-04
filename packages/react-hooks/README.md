@@ -10,21 +10,11 @@ A collection of reusable React hooks for modern web development, designed to sim
 
 ## Installation
 
-Using [pnpm](https://pnpm.io/):
-
 ```bash
 pnpm add @magnidev/react-hooks
-```
 
-Or with npm:
-
-```bash
 npm install @magnidev/react-hooks
-```
 
-Or with yarn:
-
-```bash
 yarn add @magnidev/react-hooks
 ```
 

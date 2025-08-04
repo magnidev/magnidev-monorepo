@@ -1,41 +1,54 @@
 {
-  "name": "@magnidev/frontend-utils",
-  "version": "1.0.0",
-  "license": "ISC",
-  "description": "Utility functions for frontend development",
+  "name": "@magnidev/tailwindcss-utils",
+  "version": "1.0.1",
+  "description": "A collection of utility functions for Tailwind CSS, designed to enhance the development experience and streamline the use of Tailwind in projects.",
+  "keywords": [
+    "magnidev"
+  ],
   "author": {
     "name": "fermeridamagni <Magni Development>",
-    "url": "https://www.magni.dev"
+    "email": "hello@magni.dev",
+    "url": "https://magni.dev"
   },
   "repository": {
-    "url": "git+https://github.com/magnidev/magnidev-monorepo.git",
     "type": "git",
-    "directory": "packages/frontend-utils"
+    "url": "git+https://github.com/magnidev/magnidev-monorepo.git",
+    "directory": "packages/tailwindcss-utils"
   },
-  "keywords": [],
   "bugs": {
-    "url": "https://github.com/magnidev/magnidev-monorepo/issues"
+    "url": "https://github.com/magnidev/magnidev-monorepo/issues",
+    "email": "help@magni.dev"
   },
-  "homepage": "https://www.magni.dev/en/docs/developers/packages/frontend-utils/getting-started/introduction",
-  "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "dev": "ts-node src/index.ts"
-  },
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": "./dist/index.js"
-  },
-  "main": "dist/index.js",
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE",
-    "CHANGELOG.md",
-    "package.json"
-  ],
+  "homepage": "https://magni.dev/en/docs/developers/packages/tailwindcss-utils/getting-started/introduction",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
+  },
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "package.json",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "unbuild",
+    "build:stub": "unbuild --stub",
+    "test": "vitest --run",
+    "test:watch": "vitest --watch",
+    "test:ui": "vitest --ui"
   },
   "peerDependencies": {
     "tailwindcss": "4.1.11"
@@ -45,8 +58,9 @@
     "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
-    "@magnidev/typescript-config": "workspace:*",
-    "ts-node": "^10.9.2",
-    "typescript": "5.9.2"
-  }
+    "typescript": "5.9.2",
+    "unbuild": "^3.6.0",
+    "vitest": "^3.2.4"
+  },
+  "packageManager": "pnpm@10.14.0"
 }
