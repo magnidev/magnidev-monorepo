@@ -25,7 +25,7 @@ Extend the configuration you need:
 }
 ```
 
-## Available Hooks
+## Available Configurations
 
 - `node-base` For Node.js projects
 - `node-library` For Node.js libraries
