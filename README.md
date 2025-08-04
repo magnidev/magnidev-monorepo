@@ -16,7 +16,7 @@ The monorepo is organized into the following main packages and applications:
 
 - **tailwindcss-utils**: Shared utilities for frontend Tailwind CSS projects.
 - **typescript-config**: Base TypeScript configurations.
-- **react-hooks**: A collection of React Hooks
+- **react-hooks**: A collection of React Hooks.
 
 > Explore each package’s directory for more details and individual documentation.
 
