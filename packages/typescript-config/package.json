@@ -31,7 +31,7 @@
     "./node-library": "./src/tsconfig.node-library.json"
   },
   "files": [
-    "dist",
+    "src",
     "package.json",
     "README.md",
     "LICENSE",
