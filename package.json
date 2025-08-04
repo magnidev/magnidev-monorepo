@@ -5,7 +5,8 @@
   "description": "Monorepo for Magni Development tools.",
   "author": {
     "name": "fermeridamagni <Magni Development>",
-    "url": "https://magni.dev"
+    "url": "https://magni.dev",
+    "email": "hello@magni.dev"
   },
   "repository": {
     "type": "git",
@@ -15,6 +16,7 @@
   "bugs": {
     "url": "https://github.com/magnidev/magnidev-monorepo/issues"
   },
+  "homepage": "https://magni.dev/en/docs",
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
