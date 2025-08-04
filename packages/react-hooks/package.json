@@ -2,7 +2,12 @@
   "name": "@magnidev/react-hooks",
   "version": "1.0.0",
   "description": "",
-  "keywords": [],
+  "keywords": [
+    "react",
+    "hooks",
+    "validation",
+    "magnidev"
+  ],
   "author": {
     "name": "fermeridamagni <Magni Development>",
     "email": "hello@magni.dev",
@@ -35,7 +40,11 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "package.json",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "build": "unbuild",
