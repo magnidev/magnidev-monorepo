@@ -14,10 +14,9 @@ This repository serves as the single source of truth for all @magnidev projects.
 
 The monorepo is organized into the following main packages and applications:
 
-- **frontend-utils**: Shared utilities for frontend projects.
-- **repo-cli**: Command-line tools for repository management.
-- **theme**: Shared theme and styling resources.
-- **typescript-config**: Base TypeScript configurations for consistency across projects.
+- **tailwindcss-utils**: Shared utilities for frontend Tailwind CSS projects.
+- **typescript-config**: Base TypeScript configurations.
+- **react-hooks**: A collection of React Hooks
 
 > Explore each package’s directory for more details and individual documentation.
 
@@ -28,7 +27,7 @@ The monorepo is organized into the following main packages and applications:
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/) (v18+ recommended)
-- [pnpm](https://pnpm.io/) (for fast, disk-efficient package management)
+- [pnpm](https://pnpm.io/) (v10+ for fast, disk-efficient package management)
 - [Git](https://git-scm.com/)
 
 ### Installation
@@ -49,8 +48,6 @@ pnpm install
   `pnpm test`
 - Lint all packages:  
   `pnpm lint`
-- Run a specific package script:  
-  `pnpm --filter <package-name> <script>`
 
 ---
 
@@ -66,6 +63,7 @@ We welcome contributions from everyone! To get started:
 
 ## 📚 Documentation
 
+- Find all the docs in our [website](https://magni.dev/en/docs)
 - Each package contains its own `README.md` with usage and API details.
 - For monorepo management, see [pnpm workspaces](https://pnpm.io/workspaces) and [Turborepo](https://turbo.build/).
 
