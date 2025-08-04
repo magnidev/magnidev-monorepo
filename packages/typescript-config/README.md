@@ -14,7 +14,7 @@ yarn add @magnidev/typescript-config
 
 ## Usage
 
-Import the hooks you need:
+Extend the configuration you need:
 
 ```tsx
 {
