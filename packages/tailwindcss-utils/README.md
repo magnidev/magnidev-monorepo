@@ -1,16 +1,15 @@
-# Frontend Utils
-
-## Description
+# @magnidev/frontend-utils
 
 Utility functions for frontend development.
 
 ## Installation
 
-To install the package, run:
-
 ```bash
 npm install @magnidev/frontend-utils
+
 pnpm add @magnidev/frontend-utils
+
+yarn add @magnidev/frontend-utils
 ```
 
 ## Usage
@@ -22,6 +21,10 @@ import { cn } from "@magnidev/frontend-utils";
 
 const className = cn("text-red-500", "bg-blue-500");
 ```
+
+## Contributing
+
+Contributions are welcome! Please see [contributing](../../CONTRIBUTING.md) for guidelines.
 
 ## License
 
