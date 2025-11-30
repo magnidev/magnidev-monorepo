@@ -21,21 +21,24 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "test": "turbo run test",
-    "format": "pnpm dlx ultracite@latest format",
-    "lint": "pnpm dlx ultracite@latest lint"
+    "prepare": "husky",
+    "formatter:check": "pnpm dlx ultracite@latest check",
+    "formatter:fix": "pnpm dlx ultracite@latest fix",
+    "formatter:doctor": "pnpm dlx ultracite@latest doctor"
   },
   "workspaces": [
     "packages/*"
   ],
   "devDependencies": {
-    "@biomejs/biome": "2.1.3",
+    "@biomejs/biome": "2.3.8",
     "husky": "^9.1.7",
-    "turbo": "^2.5.5",
-    "typescript": "5.9.2",
-    "ultracite": "5.1.2"
+    "turbo": "^2.6.1",
+    "typescript": "5.9.3",
+    "ultracite": "6.3.8"
   },
-  "packageManager": "pnpm@10.14.0",
+  "packageManager": "pnpm@10.24.0",
   "engines": {
-    "node": ">=18"
+    "node": ">=18",
+    "pnpm": ">=10"
   }
 }

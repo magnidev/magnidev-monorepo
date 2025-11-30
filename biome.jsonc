@@ -1,19 +1,4 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.1.3/schema.json",
-  "extends": ["ultracite"],
-  "overrides": [
-    {
-      "includes": [
-        "!**/node_modules/**",
-        "!**/public/**",
-        "!**/dist/**",
-        "!**/.next/**",
-        "!**/_generated/**/*",
-        "!**/*.gen.*",
-        "!**/.git/**",
-        "!**/.cache/**",
-        "./**/*.{json,jsonc,ts,tsx,js,jsx,html,css,graphql}"
-      ]
-    }
-  ]
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "extends": ["ultracite/core", "ultracite/react"]
 }
