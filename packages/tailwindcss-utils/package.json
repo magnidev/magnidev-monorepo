@@ -1,6 +1,6 @@
 {
   "name": "@magnidev/tailwindcss-utils",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A collection of utility functions for Tailwind CSS, designed to enhance the development experience and streamline the use of Tailwind in projects.",
   "keywords": [
     "magnidev"
@@ -51,16 +51,16 @@
     "test:ui": "vitest --ui"
   },
   "peerDependencies": {
-    "tailwindcss": "4.1.11"
+    "tailwindcss": ">=4.1.0"
   },
   "dependencies": {
     "clsx": "^2.1.1",
-    "tailwind-merge": "^3.3.1"
+    "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
-    "typescript": "5.9.2",
-    "unbuild": "^3.6.0",
-    "vitest": "^3.2.4"
+    "typescript": "5.9.3",
+    "unbuild": "^3.6.1",
+    "vitest": "^4.0.14"
   },
-  "packageManager": "pnpm@10.14.0"
+  "packageManager": "pnpm@10.24.0"
 }
