@@ -1,14 +1,13 @@
 {
-  // This file is used for library projects in TypeScript.
   "extends": "./tsconfig.node-base.json",
   "compilerOptions": {
-    "target": "esnext" /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */,
-    "module": "nodenext" /* Specify what module code is generated. */,
-    "moduleResolution": "nodenext" /* Specify how TypeScript looks up a file from a given module specifier. */,
-    "emitDeclarationOnly": false /* Only output d.ts files and not JavaScript files. */,
-    /* Emit */
-    "declaration": true /* Generate .d.ts files from TypeScript and JavaScript files in your project. */,
-    "composite": true /* Enable project references. */,
-    "outDir": "./dist" /* Specify an output folder for all emitted files. */
+    "target": "esnext",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "emitDeclarationOnly": false,
+    "declaration": true,
+    "composite": true,
+    "outDir": "./dist",
+    "strictNullChecks": true
   }
 }

@@ -9,6 +9,8 @@
   "[javascript][typescript][javascriptreact][typescriptreact][json][jsonc][html][css][graphql]": {
     "editor.defaultFormatter": "biomejs.biome"
   },
-
+  "[markdown]": {
+    "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
+  },
   "typescript.tsdk": "node_modules/typescript/lib"
 }

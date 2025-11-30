@@ -1,19 +1,19 @@
-import { useMemo } from 'react';
-import type z from 'zod';
+import { useMemo } from "react";
+import type z from "zod";
 import {
   emailSchema,
   nameSchema,
   passwordSchema,
   usernameSchema,
-} from '../schemas/auth-schema';
+} from "../schemas/auth-schema";
 
 type ValidationResult = {
   isValid: boolean;
   errors: string[];
 };
 
-const useValidateEmail = (email?: string): ValidationResult => {
-  return useMemo(() => {
+const useValidateEmail = (email?: string): ValidationResult =>
+  useMemo(() => {
     const { success, error } = emailSchema().safeParse(email);
 
     if (success) {
@@ -33,10 +33,9 @@ const useValidateEmail = (email?: string): ValidationResult => {
       errors,
     };
   }, [email]);
-};
 
-const useValidatePassword = (password?: string): ValidationResult => {
-  return useMemo(() => {
+const useValidatePassword = (password?: string): ValidationResult =>
+  useMemo(() => {
     const { success, error } = passwordSchema().safeParse(password);
 
     if (success) {
@@ -56,10 +55,9 @@ const useValidatePassword = (password?: string): ValidationResult => {
       errors,
     };
   }, [password]);
-};
 
-const useValidateName = (name?: string): ValidationResult => {
-  return useMemo(() => {
+const useValidateName = (name?: string): ValidationResult =>
+  useMemo(() => {
     const { success, error } = nameSchema().safeParse(name);
 
     if (success) {
@@ -79,15 +77,14 @@ const useValidateName = (name?: string): ValidationResult => {
       errors,
     };
   }, [name]);
-};
 
 const useValidateUsername = (
   username?: string,
   options?: {
     bannedUsernames?: string[];
   }
-): ValidationResult => {
-  return useMemo(() => {
+): ValidationResult =>
+  useMemo(() => {
     const { bannedUsernames } = options || {};
 
     const { success, error } = usernameSchema({
@@ -111,11 +108,10 @@ const useValidateUsername = (
       errors,
     };
   }, [username, options]);
-};
 
 const useValidateText = (text: string, schema: z.ZodType): ValidationResult => {
   if (!schema) {
-    throw new Error('Schema is required for validation');
+    throw new Error("Schema is required for validation");
   }
 
   return useMemo(() => {

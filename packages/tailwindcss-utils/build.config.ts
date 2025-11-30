@@ -1,15 +1,15 @@
-import { defineBuildConfig } from 'unbuild';
+import { defineBuildConfig } from "unbuild";
 
 export default defineBuildConfig({
   entries: [
     {
-      input: 'src/index.ts',
-      format: 'esm',
+      input: "src/index.ts",
+      format: "esm",
     },
     {
-      input: 'src/index.ts',
-      format: 'cjs',
-      ext: 'cjs',
+      input: "src/index.ts",
+      format: "cjs",
+      ext: "cjs",
       declaration: false,
     },
   ],
@@ -18,6 +18,6 @@ export default defineBuildConfig({
   rollup: {
     emitCJS: true,
   },
-  outDir: 'dist',
-  externals: ['react', 'react-dom', 'zod'],
+  outDir: "dist",
+  externals: ["react", "react-dom", "zod"],
 });
