@@ -51,7 +51,7 @@
     "test:ui": "vitest --ui"
   },
   "peerDependencies": {
-    "tailwindcss": ">=4.1.0"
+    "tailwindcss": ">=4.1.18"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -60,7 +60,7 @@
   "devDependencies": {
     "typescript": "5.9.3",
     "unbuild": "^3.6.1",
-    "vitest": "^4.0.14"
+    "vitest": "^4.0.16"
   },
-  "packageManager": "pnpm@10.24.0"
+  "packageManager": "pnpm@10.27.0"
 }
