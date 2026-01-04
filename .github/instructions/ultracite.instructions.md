@@ -8,9 +8,9 @@ This project uses **Ultracite**, a zero-config Biome preset that enforces strict
 
 ## Quick Reference
 
-- **Format code**: `npx ultracite fix`
-- **Check for issues**: `npx ultracite check`
-- **Diagnose setup**: `npx ultracite doctor`
+- **Format code**: `pnpm dlx ultracite fix`
+- **Check for issues**: `pnpm dlx ultracite check`
+- **Diagnose setup**: `pnpm dlx ultracite doctor`
 
 Biome (the underlying engine) provides extremely fast Rust-based linting and formatting. Most issues are automatically fixable.
 
@@ -127,4 +127,4 @@ Biome's linter will catch most issues automatically. Focus your attention on:
 
 ---
 
-Most formatting and common issues are automatically fixed by Biome. Run `npx ultracite fix` before committing to ensure compliance.
+Most formatting and common issues are automatically fixed by Biome. Run `pnpm dlx ultracite fix` before committing to ensure compliance.
