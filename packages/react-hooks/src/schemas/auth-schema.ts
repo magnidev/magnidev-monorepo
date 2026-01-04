@@ -67,4 +67,16 @@ const passwordSchema = (): z.ZodType =>
       error: "Must include at least one special character",
     });
 
-export { nameSchema, usernameSchema, emailSchema, passwordSchema };
+const phoneNumberSchema = z
+  .string()
+  .min(10, "Phone number must be at least 10 digits")
+  .max(15, "Phone number must be at most 15 digits")
+  .regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number format");
+
+export {
+  nameSchema,
+  usernameSchema,
+  emailSchema,
+  passwordSchema,
+  phoneNumberSchema,
+};
